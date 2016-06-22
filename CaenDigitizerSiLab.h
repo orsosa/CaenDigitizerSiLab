@@ -10,9 +10,16 @@
 #include <sstream>
 #include <iostream>
 #include <string>
+#include "TObject.h"
+#include "TTree.h"
+#include "TNtuple.h"
+#include "TH1F.h"
+#include "TROOT.h"
+#include "TCanvas.h"
+
 #define MaxNCh 8
 
-class CaenDigitizerSiLab
+class CaenDigitizerSiLab: public TObject
 {
   //private:
 public:
@@ -76,6 +83,6 @@ public:
 	return ret;
   }
 
-
+ClassDef(CaenDigitizerSiLab,1)
 };
 #endif

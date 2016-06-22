@@ -1,5 +1,7 @@
 #include "CaenDigitizerSiLab.h"
 
+ClassImp(CaenDigitizerSiLab)
+
 int32_t CaenDigitizerSiLab::init()
 {
   triggermode = CAEN_DGTZ_TRGMODE_ACQ_ONLY;
