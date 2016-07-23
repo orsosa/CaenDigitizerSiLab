@@ -16,6 +16,9 @@
 #include "TH1F.h"
 #include "TROOT.h"
 #include "TCanvas.h"
+#include "TFile.h"
+#include "TTree.h"
+#include "TNtuple.h"
 
 #define MaxNCh 8
 
@@ -24,9 +27,11 @@ class CaenDigitizerSiLab: public TObject
   //private:
 public:
   CAEN_DGTZ_ErrorCode ret;
+  int32_t NCh;
   int32_t handle;
   int32_t trigthresh;
-  int32_t size;
+  uint32_t size;
+  uint32_t bsize;
   CAEN_DGTZ_BoardInfo_t BoardInfo;
   CAEN_DGTZ_EventInfo_t eventInfo;
   CAEN_DGTZ_UINT16_EVENT_t *Evt;
@@ -38,16 +43,18 @@ public:
   char *buffer;
   char *evtptr; 
   int32_t kSamples;
-
+  TFile *ofile;
+  TNtuple *data;
 
 public:
- CaenDigitizerSiLab() : kPolarizationType(0), kEnableMask(0xff), kSamples(40) {init();}
+ CaenDigitizerSiLab() : kPolarizationType(0), kEnableMask(0xff), kSamples(100) {init();}
   CaenDigitizerSiLab(int8_t p, uint32_t em, int32_t s): kPolarizationType(p), kEnableMask(em), kSamples(s){init();}
   int32_t init();
   int32_t getInfo();
   int32_t getPedestal(int32_t samples){return 0;}
   CAEN_DGTZ_ErrorCode  startSWAcq(){ret = CAEN_DGTZ_SWStartAcquisition(handle); return ret;}
-  int32_t readEvent(){return 0;}
+  int32_t readEvents(int32_t evenst=100);
+  int32_t storeData();
   int32_t waitTempStabilization(){return 0;}
   uint32_t chTemp;
   int32_t readTemp(int32_t ch)
