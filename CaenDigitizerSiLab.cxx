@@ -5,6 +5,7 @@ ClassImp(CaenDigitizerSiLab)
 int32_t CaenDigitizerSiLab::init()
 {
   NCh=8;
+  kOffset=0x7FFF;
   triggermode = CAEN_DGTZ_TRGMODE_ACQ_ONLY;
   Evt = NULL;
   acqmode = CAEN_DGTZ_SW_CONTROLLED;
@@ -16,9 +17,15 @@ int32_t CaenDigitizerSiLab::init()
     return -1;
   }
   ret = CAEN_DGTZ_Reset(handle);// resetting Digitizer
-  waitTempStabilization();
-  // ret = CAEN_DGTZ_Calibrate(handle);
-  //sleep(10);
+  if (kDoCalibration)
+  {
+    waitTempStabilization();
+    std::cout<<"starting calibration\n";
+    ret = CAEN_DGTZ_Calibrate(handle);
+    std::cout<<"cal. ret: "<<ret<<std::endl;
+    sleep(10);
+  }
+  std::cout<<"number of samnples per acq: "<<kSamples<<std::endl;
   ret = CAEN_DGTZ_SetRecordLength(handle,kSamples); // samples a grabar por acquisition windows CAMBIAR es decir tamaño de buffer
   ret = CAEN_DGTZ_SetChannelEnableMask(handle,kEnableMask);// no disponible en el DT5740
   TString branches;
@@ -31,10 +38,18 @@ int32_t CaenDigitizerSiLab::init()
   branches.Append(":time:event");
   ofile = new TFile("data_from_digitizer.root","recreate");
   data = new TNtuple("data","amp (V) and time (nsample)",branches.Data() );
-  // ret = CAEN_DGTZ_SetChannelDCOffset(handle,0,offset); //ch0 0 a -Vpp
-  // ret = CAEN_DGTZ_SetChannelDCOffset(handle,1,offset); //ch0 0 a -Vpp
-  ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,0,trigthresh);                  /* Set selfTrigger threshold */
-  ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,1,trigthresh);                  /* Set selfTrigger threshold */
+    
+  trigthresh = th2int(0.5);//threshold in volts.
+  for (int32_t k=0;k<MaxNCh;k++)
+  {
+      ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,k,trigthresh);                  /* Set selfTrigger threshold */
+      ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
+      
+      //ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnFallingEdge);
+               ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnRisingEdge);
+  }
+
+
   ret = CAEN_DGTZ_SetSWTriggerMode(handle, triggermode);//modo trigger
   ret = CAEN_DGTZ_SetPostTriggerSize(handle,90); 
   //% a grabar por cada trigger del record length
@@ -45,6 +60,7 @@ int32_t CaenDigitizerSiLab::init()
     printf("Errors during Digitizer Configuration.\n");
   }
   
+
   ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
  
   //localiza buffer pointer en la memoria
@@ -62,13 +78,18 @@ int32_t CaenDigitizerSiLab::getInfo()
   return 0;
 }
 
-int32_t  CaenDigitizerSiLab::readEvents(int32_t events)
+int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic)
 {
   int32_t count=0;
+  if (!automatic){
+    ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,0xff); //Adjacent channels paired.
+  }
   startSWAcq();
+
   while (count < events)
   {		
-    ret = CAEN_DGTZ_SendSWtrigger(handle);
+    if (automatic)
+      ret = CAEN_DGTZ_SendSWtrigger(handle);
     ret = CAEN_DGTZ_ReadData(handle,CAEN_DGTZ_SLAVE_TERMINATED_READOUT_MBLT,buffer,(uint32_t *)&bsize);
     //entrega en numEvents el numero de eventos capturados
     uint32_t numEvents;
