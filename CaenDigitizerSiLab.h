@@ -49,10 +49,18 @@ public:
   bool kDoCalibration;
   TFile *ofile;
   TNtuple *data;
-
+  float *meanTemp;
+  float *varTemp;
+  float *storedMeanTemp;
+  float *storedVarTemp;
+  int32_t kNSamplesTemp;
+  float kDtTemp;
+  
+  
 public:
- CaenDigitizerSiLab() : kPolarizationType(0), kEnableMask(0xff), kSamples(500), kDoCalibration(kFALSE) {init();}
- CaenDigitizerSiLab(int8_t p, uint32_t em, int32_t s, bool dc): kPolarizationType(p), kEnableMask(em), kSamples(s), kDoCalibration(dc) {init();}
+ CaenDigitizerSiLab() : kPolarizationType(0), kEnableMask(0xff), kSamples(100), kDoCalibration(kFALSE) {init();}
+ CaenDigitizerSiLab(int8_t p, uint32_t em, int32_t s, bool docal): kPolarizationType(p), kEnableMask(em), kSamples(s), kDoCalibration(docal) {init();}
+  ~CaenDigitizerSiLab();
   int32_t init();
   int32_t getInfo();
   int32_t getPedestal(int32_t samples){return 0;}
@@ -60,6 +68,7 @@ public:
   int32_t readEvents(int32_t evenst=100,bool automatic=kTRUE);
   int32_t storeData();
   int32_t waitTempStabilization(){return 0;}
+  int32_t getTempMeanVar();
   uint32_t chTemp;
   int32_t readTemp(int32_t ch)
   {
@@ -67,7 +76,7 @@ public:
     return 0;
   }
   
-  int32_t readTempAll()
+  int32_t readTempAll(bool print=true)
   {
     std::cout<<"ch\ttemp (°C)\n";
     for (int32_t i =0; i<MaxNCh; i++)
@@ -75,12 +84,13 @@ public:
       if ((kEnableMask>>i)&0x1)
       {
 	readTemp(i);
-	std::cout<<i<<"\t\t"<<chTemp<<std::endl;
+	if (print) std::cout<<i<<"\t\t"<<chTemp<<std::endl;
       }
     }
     return 0;
   }
-  uint32_t th2int(float value){
+  uint32_t th2int(float value)
+  {
 	uint32_t ret = 0;
 	switch(kPolarizationType){
 	case -1:	ret = (uint32_t) ((MaxVpp+value)*(0x1<<NBit)/MaxVpp);
@@ -93,6 +103,39 @@ public:
 	}
 	return ret;
   }
+  void setPolarizationType(int pol=0)
+  {
+    kPolarizationType = pol;
+    switch (kPolarizationType)
+      {
+      case 0:
+	kOffset=0x7FFF;
+	break;
+      case -1:
+	kOffset=0x1000;
+	break;
+      case 1:
+	kOffset=0xefff;
+      }
+    for (int k =0; k<MaxNCh;k++)
+      ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
+    calibrate();
+  }
+  void setNSamples(int32_t nsamples=100)
+  {
+    kSamples=nsamples;
+  }
+
+  void calibrate()
+  {
+    waitTempStabilization();// var <0.5
+    std::cout<<"starting calibration\n";
+    readTempAll();
+    ret = CAEN_DGTZ_Calibrate(handle);
+    std::cout<<"cal. ret: "<<ret<<std::endl;
+    sleep(5);
+  }
+  
 
 ClassDef(CaenDigitizerSiLab,1)
 };
