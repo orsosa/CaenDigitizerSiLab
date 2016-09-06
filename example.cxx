@@ -8,7 +8,7 @@ int main()
   //  dig->calibrate();
   dig->getInfo();
   dig->readTempAll();
-  dig->readEvents(300000);
+  dig->readEvents(1000000);
   dig->storeData();
 
   return 0;

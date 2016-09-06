@@ -53,12 +53,14 @@ int32_t CaenDigitizerSiLab::init()
   ofile = new TFile("data_from_digitizer.root","recreate");
   data = new TNtuple("data","amp (V) and time (nsample)",branches.Data() );
     
-  trigthresh = th2int(0.5);//threshold in volts.
+  //  trigthresh = th2int(0.5);//threshold in volts.
+  trigthresh=14000;
+  std::cout<<"trihthreshold: "<<trigthresh<<std::endl;
   for (int32_t k=0;k<MaxNCh;k++)
   {
-    //      ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,k,trigthresh);                  /* Set selfTrigger threshold */
-      ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,k,trigthresh);                  /* Set selfTrigger threshold */
       ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
+      //ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,k,trigthresh);                /* Set selfTrigger threshold */
+      ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,k,trigthresh);                  /* Set selfTrigger threshold */
       
       ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnFallingEdge);
       //ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnRisingEdge);
@@ -66,7 +68,7 @@ int32_t CaenDigitizerSiLab::init()
 
 
   ret = CAEN_DGTZ_SetSWTriggerMode(handle, triggermode);//modo trigger
-  ret = CAEN_DGTZ_SetPostTriggerSize(handle,90); 
+  ret = CAEN_DGTZ_SetPostTriggerSize(handle,2); 
   //% a grabar por cada trigger del record length
   ret = CAEN_DGTZ_SetAcquisitionMode(handle, acqmode);			// modo de adquisicion
   ret = CAEN_DGTZ_SetMaxNumEventsBLT(handle,1);//numero maximo de eventos por transferencia
@@ -98,7 +100,7 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic)
   int32_t count=0;
   ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
   if (!automatic){
-    ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,0xff); //Adjacent channels paired.
+    ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,0xFF); //Adjacent channels paired.
   }
   startSWAcq();
 
@@ -181,4 +183,5 @@ CaenDigitizerSiLab::~CaenDigitizerSiLab()
   delete [] varTemp;
   delete [] storedMeanTemp;
   delete [] storedVarTemp;
+  //  CAEN_DGTZ_FreeEvent(handle,(void **)&Evt);
 }
