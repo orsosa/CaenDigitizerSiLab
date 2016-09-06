@@ -13,10 +13,10 @@ LD := g++
 LDFLAGS := -O2 $(ROOTLDFLAGS)
 
 INCLUDES := -I.
-LIBS := $(ROOTGLIBS) -lMathMore -lSpectrum -lEG
+LIBS := $(ROOTGLIBS) -lSpectrum -lEG
 HEADERS := $(lib).h
 
-all: lib$(lib).so.1.0.1 
+all: lib$(lib).so.1.0.1 example
 
 example: example.o
 	$(CXX) $(LIBS) -L. -lCaenDigitizerSiLab -lCAENDigitizer $(LDFLAGS)  $^ -o $@

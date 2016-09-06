@@ -1,5 +1,6 @@
 #include "TROOT.h"
 #include "TNtuple.h"
+#include "TTree.h"
 #include "TH1F.h"
 #include "TFile.h"
 
@@ -8,11 +9,23 @@ int get_charge(char* name="data_from_digitizer.root"){
 
   TFile *f = new TFile(name,"update");
   TNtuple * t =(TNtuple *)f->Get("data");
-  char varList[100]="q0:q1:q2:q3:q4:q5:q6:q7:ev";
-  TNtuple *tq = new TNtuple("tq","charge (a.u.), min (a.u.)",varList);
+  //char varList[100];
+  TString varList;
   const int NCh=8;
-  Float_t time,c[8],evt,evt_prev,min,q[NCh],dt,hl,ll;
-  Float_t dataArr[9];
+  varList.Append("q0");
+  for (int k=1; k<NCh; k++)
+  {
+    varList.Append(Form(":q%d",k));
+  }
+  for (int k=0; k<NCh; k++)
+  {
+    varList.Append(Form(":min%d",k));
+  }
+  varList.Append(":ev");
+  TNtuple *tq = new TNtuple("tq","charge (a.u.), min (a.u.)",varList.Data());
+
+  Float_t time,c[NCh],c1[NCh],evt,evt_prev,min[NCh],q[NCh],dt,hl,ll;
+  Float_t dataArr[2*NCh+1];
   // gate definition.
   ll = 0;// low time edge
   hl = 100;// high time edge
@@ -24,9 +37,12 @@ int get_charge(char* name="data_from_digitizer.root"){
   Long_t Ne=t->GetEntries();
   t->GetEntry(0);
   evt_prev=evt;
-  min=100;
+
   for (int k=0;k<NCh;k++)
+  {
+    min[k]=1e7;
     q[k]=0;
+  }
   dt = time;
   t->GetEntry(1);
   dt =time-dt;
@@ -34,16 +50,30 @@ int get_charge(char* name="data_from_digitizer.root"){
   {
     t->GetEntry(i);
     for (int k=0;k<NCh;k++)
-      if (ll<time&&time<hl) q[k]+=((float)((1<<14)-1) -c[k])*2.0/((float)(1<<14))/50*200;
-    //    if(min[i]>c1) min[i] = c1;
+    {
+      if (ll<time&&time<hl)
+      {
+	//	q[k]+=((float)((1<<14)-1) -c[k])*2.0/((float)(1<<14))/50*200;
+	q[k]+=c[k];
+      }
+      if(min[k]>c[k]) min[k] = c[k];
+    }
     if (evt != evt_prev)
 
     {
-      tq->Fill(q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7],evt_prev);
+      for (int k=0;k<NCh;k++)
+      {
+	dataArr[k]=q[k];
+	dataArr[k+NCh]=min[k];
+      }
+      dataArr[2*NCh]=evt_prev;
+      tq->Fill(dataArr);
       evt_prev = evt;
       for (int k=0;k<NCh;k++)
-	 q[k]=0;
-      min=100;
+      {
+	q[k]=0;
+	min[k]=1e7;
+      }
     }
     
   }
