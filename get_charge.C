@@ -1,3 +1,4 @@
+#include <iostream>
 #include "TROOT.h"
 #include "TNtuple.h"
 #include "TTree.h"
@@ -25,32 +26,35 @@ int get_charge(char* name="data_from_digitizer.root"){
   varList.Append(":ev");
   TNtuple *tq = new TNtuple("tq","charge (a.u.), min (a.u.)",varList.Data()); 
   TString branches;
-  branches.Append(Form("Ch%d:min%d",0));
-  for (int32_t k =1;k<NCh;k++)
+  branches.Append(Form("Ch%d:min%d:tmin%d",0,0,0));
+  for (int k =1;k<NCh;k++)
   {
     branches.Append(":");    
-    branches.Append(Form("Ch%d:min%d",k));
+    branches.Append(Form("Ch%d:min%d:tmin%d",k,k,k));
   }
   branches.Append(":time:event");
+  std::cout<<"branches: "<<branches.Data()<<std::endl;
   TNtuple * tdm =new TNtuple("tdm","raw data with min",branches.Data());
   
-  Float_t time,c[NCh],c1[NCh],evt,evt_prev,min[NCh],q[NCh],dt,hl,ll,amp[NCh][NSamples];
-  Float_t dataArr[2*NCh+1],dataTime[2*NCh+2];
+  Float_t time,c[NCh],c1[NCh],evt,evt_prev,min[NCh],tmin[NCh],q[NCh],dt,hl,ll,amp[NCh][NSamples];
+  Float_t dataArr[2*NCh+1],dataTime[3*NCh+2];
   // gate definition.
-  ll = 0;// low time edge
-  hl = 100;// high time edge
+  ll = 15;// low time edge
+  hl = 65;// high time edge
   t->SetBranchAddress("time",&time);
   for (int k=0;k<NCh;k++)
     t->SetBranchAddress(Form("Ch%d",k),&c[k]);
 
   t->SetBranchAddress("event",&evt);
   Long_t Ne=t->GetEntries();
+  //Long_t Ne =1000;
   t->GetEntry(0);
   evt_prev=evt;
 
   for (int k=0;k<NCh;k++)
   {
     min[k]=1e7;
+    tmin[k]=-1;
     q[k]=0;
   }
   //  dt = time;
@@ -68,23 +72,29 @@ int get_charge(char* name="data_from_digitizer.root"){
       }
       dataArr[2*NCh]=evt_prev;
       tq->Fill(dataArr);
-      evt_prev = evt;
-      for (int k=0;k<NCh;k++)
-      {
-	q[k]=0;
-	min[k]=1e7;
-      }
+
       for (int k=0;k<NSamples;k++)
       {
 	for (int ch=0;ch<NCh;ch++)
 	{
-	  dataTime[2*ch]=amp[ch][k];
-	  dataTime[2*ch+1]=min[ch];
+	  dataTime[3*ch]=amp[ch][k];
+	  dataTime[3*ch+1]=min[ch];
+	  dataTime[3*ch+2]=tmin[ch];	  
+	  //std::cout<<"min: "<<min[ch]<<std::endl;
 	}
-	dataTime[2*NCh]=k;
-	dataTime[2*NCh+1]=event;
+	dataTime[3*NCh]=k;
+	dataTime[3*NCh+1]=evt_prev;
 	tdm->Fill(dataTime);
       }
+      //reset values.
+      for (int k=0;k<NCh;k++)
+      {
+	q[k]=0;
+	min[k]=1e7;
+	tmin[k] = -1;
+      }
+      evt_prev = evt;
+      ///////////
     }
 
     for (int k=0;k<NCh;k++)
@@ -95,10 +105,15 @@ int get_charge(char* name="data_from_digitizer.root"){
 	//	q[k]+=((float)((1<<14)-1) -c[k])*2.0/((float)(1<<14))/50*200;
 	q[k]+=c[k];
       }
-      if(min[k]>c[k]) min[k] = c[k];
+      if(min[k]>c[k]) 
+      {
+	min[k] = c[k];
+	tmin[k] = time;
+      }
     }
 
-    
+    std::cout<<100.*(i+1.)/float(Ne)<<"\r";
+    std::cout.flush();
   }
   tq->Write("",TObject::kOverwrite);
   tdm->Write("",TObject::kOverwrite);
