@@ -16,7 +16,7 @@ INCLUDES := -I.
 LIBS := $(ROOTGLIBS) -lSpectrum -lEG
 HEADERS := $(lib).h
 
-all: lib$(lib).so.1.0.1 example
+all: lib$(lib).so.1.0.1 example 
 
 example: example.o
 	$(CXX) $(LIBS) -L. -lCaenDigitizerSiLab -lCAENDigitizer $(LDFLAGS)  $^ -o $@
@@ -33,5 +33,3 @@ lib$(lib).so.1.0.1 : $(OBJS) $(lib)Dict.cxx
 
 %.o : %.cxx
 	$(CXX) $(CXXFLAGS) -g -c -Wall -fPIC $^ -o $@
-
-

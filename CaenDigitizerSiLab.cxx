@@ -8,7 +8,8 @@ int32_t CaenDigitizerSiLab::init()
   varTemp= new float[MaxNCh];
   storedMeanTemp= new float[MaxNCh];
   storedVarTemp= new float[MaxNCh];
-
+  tempFile.open("temp_measurements.txt");
+  
   NCh=MaxNCh;
   kNSamplesTemp=30; // number of samples to determine mean an var. of channel temperature.
   kDtTemp=1;// samplinbg time for temperature measurements.
@@ -51,10 +52,10 @@ int32_t CaenDigitizerSiLab::init()
   }
   branches.Append(":time:event");
   ofile = new TFile("data_from_digitizer.root","recreate");
-  data = new TNtuple("data","amp (V) and time (nsample)",branches.Data() );
+  data = new TNtuple("data","amp (adc ch) and time (nsample)",branches.Data() );
     
   //  trigthresh = th2int(0.5);//threshold in volts.
-  trigthresh=14000;
+  trigthresh=15200;
   std::cout<<"trihthreshold: "<<trigthresh<<std::endl;
   for (int32_t k=0;k<MaxNCh;k++)
   {
@@ -73,6 +74,7 @@ int32_t CaenDigitizerSiLab::init()
   ret = CAEN_DGTZ_SetAcquisitionMode(handle, acqmode);			// modo de adquisicion
   ret = CAEN_DGTZ_SetMaxNumEventsBLT(handle,1);//numero maximo de eventos por transferencia
   
+  //CAEN_DGTZ_SetChannelPairTriggerLogic(handle,6,7,CAEN_DGTZ_LOGIC_AND,2);
   if(ret != CAEN_DGTZ_Success) {
     printf("Errors during Digitizer Configuration.\n");
   }
@@ -95,19 +97,25 @@ int32_t CaenDigitizerSiLab::getInfo()
   return 0;
 }
 
-int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic)
+int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t start_event)
 {
   int32_t count=0;
+  uint32_t dat=0;
   ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
   if (!automatic){
-    ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,0xFF); //Adjacent channels paired.
+    ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(3<<6)); //Adjacent channels paired.
   }
+  setCoincidence(6,7);
   startSWAcq();
 
-  while (count < events)
+  ret = CAEN_DGTZ_ReadRegister(handle,0x1084,&dat);
+  printf("\nline %d, reg: %x\n",__LINE__,dat);
+  while (count < events
+	 )
   {		
     if (automatic)
       ret = CAEN_DGTZ_SendSWtrigger(handle);
+    
     ret = CAEN_DGTZ_ReadData(handle,CAEN_DGTZ_SLAVE_TERMINATED_READOUT_MBLT,buffer,(uint32_t *)&bsize);
     //entrega en numEvents el numero de eventos capturados
     uint32_t numEvents;
@@ -127,11 +135,12 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic)
 	  data_arr[k] = (int32_t)Evt->DataChannel[k][j];
 	}
 	data_arr[NCh]=j;
-	data_arr[NCh+1]=count+i;
+	data_arr[NCh+1]=count+i+start_event;
 	data->Fill(data_arr);
       }
       ret = CAEN_DGTZ_FreeEvent(handle,(void **)&Evt);
     }
+    delete data_arr;
     count +=numEvents;
   }
   std::cout<<std::endl;
@@ -165,6 +174,8 @@ int32_t CaenDigitizerSiLab::getTempMeanVar()
       meanTemp[i]/=kNSamplesTemp;
       varTemp[i]=(varTemp[i]/kNSamplesTemp-meanTemp[i]*meanTemp[i]);
     }
+	
+    return 0;
 
   }
 
@@ -173,9 +184,36 @@ int32_t CaenDigitizerSiLab::storeData()
 {
   ofile->cd();
   data->Write("",TObject::kOverwrite);
-  ofile->Close();
+  //ofile->Close();
+  // tempFile.close();
   return 0;
 }
+
+int32_t  CaenDigitizerSiLab::setCoincidence(int32_t ch0,int32_t ch1,int32_t wd)
+{
+  
+  uint32_t data=0;
+  //  uint32_t data=1<<ch0 | 1<<ch1;
+  //data |= wd<<20;
+  //data |= 1<<24;	
+  uint32_t reg = 0x1084 | ch0<<8;
+  ret = CAEN_DGTZ_ReadRegister(handle,reg,&data);
+  //printf("\nactual value\n");
+  //printf("\nregister: %x\n",reg);
+  //printf("\ndata: %x\n",data);
+  uint32_t opt=0x0;//0: AND, 1: only n, 2: only n+1, 3: OR
+  data = (data&~0x3) | (opt);
+  ret = CAEN_DGTZ_WriteRegister(handle,reg,data);
+  //ret = CAEN_DGTZ_ReadRegister(handle,reg,&data);
+  ret = CAEN_DGTZ_ReadRegister(handle,reg,&data);
+  //printf("\nupdated value\n");
+  //printf("\nregister: %x\n",reg);
+  //printf("\ndata: %x\n",data);  
+  
+  //  ret = CAEN_DGTZ_WriteRegister(handle,0x1684,data);
+  return ret;
+}
+
 
 CaenDigitizerSiLab::~CaenDigitizerSiLab()
 {
@@ -183,5 +221,8 @@ CaenDigitizerSiLab::~CaenDigitizerSiLab()
   delete [] varTemp;
   delete [] storedMeanTemp;
   delete [] storedVarTemp;
+  ofile->Close();
+  tempFile.close();
+   
   //  CAEN_DGTZ_FreeEvent(handle,(void **)&Evt);
 }

@@ -28,7 +28,7 @@ int get_charge(char* name="data_from_digitizer.root"){
   Float_t dataArr[2*NCh+1];
   // gate definition.
   ll = 0;// low time edge
-  hl = 100;// high time edge
+  hl = 50;// high time edge
   t->SetBranchAddress("time",&time);
   for (int k=0;k<NCh;k++)
     t->SetBranchAddress(Form("Ch%d",k),&c[k]);

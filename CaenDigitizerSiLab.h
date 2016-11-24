@@ -48,6 +48,7 @@ public:
   int32_t kSamples;
   bool kDoCalibration;
   TFile *ofile;
+  std::ofstream tempFile;
   TNtuple *data;
   float *meanTemp;
   float *varTemp;
@@ -65,11 +66,12 @@ public:
   int32_t getInfo();
   int32_t getPedestal(int32_t samples){return 0;}
   CAEN_DGTZ_ErrorCode  startSWAcq(){ret = CAEN_DGTZ_SWStartAcquisition(handle); return ret;}
-  int32_t readEvents(int32_t evenst=100,bool automatic=kTRUE);
+  int32_t readEvents(int32_t evenst=100,bool automatic=kTRUE, int32_t start_event=0);
   int32_t storeData();
   int32_t waitTempStabilization(){return 0;}
   int32_t getTempMeanVar();
   uint32_t chTemp;
+  int32_t setCoincidence(int32_t ch0=0, int32_t ch1=1, int32_t wd=2);//wd 16 ns
   int32_t readTemp(int32_t ch)
   {
     ret = CAEN_DGTZ_ReadTemperature(handle, ch, &chTemp);
@@ -85,6 +87,19 @@ public:
       {
 	readTemp(i);
 	if (print) std::cout<<i<<"\t\t"<<chTemp<<std::endl;
+      }
+    }
+    return 0;
+  }
+  int32_t storeTempAll(bool print=true)
+  {
+    tempFile<<"ch\ttemp (°C)\tdate\n";
+    for (int32_t i =0; i<MaxNCh; i++)
+    {
+      if ((kEnableMask>>i)&0x1)
+      {
+	readTemp(i);
+	if (print) tempFile<<i<<"\t"<<chTemp<<"\t"<<time(0)<<std::endl;
       }
     }
     return 0;
