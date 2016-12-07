@@ -24,10 +24,12 @@ int get_charge_minfix(char* name="data_from_digitizer.root"){
     varList.Append(Form(":min%d",k));
   }
   varList.Append(":ev");
-  TNtuple *tq = new TNtuple("tqmf","charge (pC), min (a.u.) using min fixed in time",varList.Data()); 
+  TNtuple *tq = new TNtuple("tqmf","charge (nC), min (a.u.)",varList.Data()); 
   
   Float_t time,c[NCh],c1[NCh],evt,evt_prev,min[NCh],tmin[NCh],q[NCh],dt,hl,ll,llp,hlp,ped[NCh],count[NCh],countp[NCh],amp[NCh][NSamples];
   Float_t dataArr[2*NCh+1],dataTime[3*NCh+2];
+  Float_t adc2v = 2.0/( (1<<14) - 1.0 );
+  Float_t dc_offset= 2.0*0x1000/0xffff - 1.0 -1.0;//second -1 is due to adc2v
   // gate definition.
   ll = 10;// low time edge
   hl = 100;// high time edge
@@ -56,6 +58,7 @@ int get_charge_minfix(char* name="data_from_digitizer.root"){
   }  //  dt = time;
   //  t->GetEntry(1);
   //  dt =time-dt;
+  
   for (int i=0;i<Ne;i++)
   {
     t->GetEntry(i);
@@ -63,7 +66,7 @@ int get_charge_minfix(char* name="data_from_digitizer.root"){
     {
       for (int k=0;k<NCh;k++)
       {
-	dataArr[k]=-((q[k]-ped[k]/countp[k]*count[k])* 2*(hl-ll)/50.)/1000.;
+	dataArr[k]=-((q[k]-ped[k]/countp[k]*count[k])* 2*(hl-ll)/50.);
 	dataArr[k+NCh]=min[k];
       }
       dataArr[2*NCh]=evt_prev;
@@ -87,14 +90,14 @@ int get_charge_minfix(char* name="data_from_digitizer.root"){
       {
 	//	q[k]+=((float)((1<<14)-1) -c[k])*2.0/((float)(1<<14))/50*200;
 	count[k]++;
-	q[k]+=c[k];
+	q[k]+=c[k]*adc2v + dc_offset;
       }
       //      if (llp<(time-tmin[k])&&(time-tmin[k])<hlp
       if (llp<time&&time<hlp)
       {
 	//	q[k]+=((float)((1<<14)-1) -c[k])*2.0/((float)(1<<14))/50*200;
 	countp[k]++;
-	ped[k]+=c[k];
+	ped[k]+=c[k]*adc2v + dc_offset;
       }
     }
 

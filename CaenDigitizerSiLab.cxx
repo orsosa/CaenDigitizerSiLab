@@ -16,13 +16,13 @@ int32_t CaenDigitizerSiLab::init()
   switch (kPolarizationType)
   {
   case 0:
-    kOffset=0x7FFF;
+    kOffset=0x7FFF;//-1.52590218966963675e-05
     break;
   case -1:
-    kOffset=0x1000;
+    kOffset=0x1000; // (1 - -1)*0x1000/0xffff - 1 = -8.74998092622262913e-01
     break;
   case 1:
-    kOffset=0xefff;
+    kOffset=0xefff;//8.74998092622262913e-01
     break;
   }
   triggermode = CAEN_DGTZ_TRGMODE_ACQ_ONLY;
@@ -55,7 +55,7 @@ int32_t CaenDigitizerSiLab::init()
   data = new TNtuple("data","amp (adc ch) and time (nsample)",branches.Data() );
     
   //  trigthresh = th2int(0.5);//threshold in volts.
-  trigthresh=15200;
+  trigthresh=15200;//-1.94160868846080525e-02 V (~ 4 ph.e.)
   std::cout<<"trihthreshold: "<<trigthresh<<std::endl;
   for (int32_t k=0;k<MaxNCh;k++)
   {

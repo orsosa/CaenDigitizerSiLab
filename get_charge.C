@@ -32,12 +32,15 @@ int get_charge(char* name="data_from_digitizer.root"){
     branches.Append(":");    
     branches.Append(Form("Ch%d:min%d:tmin%d",k,k,k));
   }
-  branches.Append(":time:event");
+  branches.Append(":time:event:adc2v:dc_offset");
   std::cout<<"branches: "<<branches.Data()<<std::endl;
-  TNtuple * tdm =new TNtuple("tdm","raw data with min",branches.Data());
+  TNtuple * tdm =new TNtuple("tdm","raw data with min and adc2V gain",branches.Data());
   
   Float_t time,c[NCh],c1[NCh],evt,evt_prev,min[NCh],tmin[NCh],q[NCh],dt,hl,ll,amp[NCh][NSamples];
-  Float_t dataArr[2*NCh+1],dataTime[3*NCh+2];
+  Float_t dataArr[2*NCh+1],dataTime[3*NCh+3];
+  Float_t adc2v = 2.0/( (1<<14) - 1.0 );
+  Float_t dc_offset= 2.0*0x1000/0xffff - 1.0  - 1.0;//second -1 is due to  adc2v
+
   // gate definition.
   ll = 15;// low time edge
   hl = 65;// high time edge
@@ -84,6 +87,9 @@ int get_charge(char* name="data_from_digitizer.root"){
 	}
 	dataTime[3*NCh]=k;
 	dataTime[3*NCh+1]=evt_prev;
+	dataTime[3*NCh+2]=adc2v;
+	dataTime[3*NCh+3]=dc_offset;
+	
 	tdm->Fill(dataTime);
       }
       //reset values.
