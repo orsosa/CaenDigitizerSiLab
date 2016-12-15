@@ -16,8 +16,8 @@ int main()
   dig->getInfo();
   dig->readTempAll();
   //dig->setCoincidence(0,1);
-  int bunch_size=10000;
-  int NBunch =30;
+  int bunch_size=100;
+  int NBunch =1;
   
   for (int k=0;k<NBunch;k++)
   {

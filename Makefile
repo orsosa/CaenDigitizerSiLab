@@ -16,12 +16,18 @@ INCLUDES := -I.
 LIBS := $(ROOTGLIBS) -lSpectrum -lEG
 HEADERS := $(lib).h
 
-all: lib$(lib).so.1.0.1 example 
+all: lib$(lib).so.1.0.1 example rda
 
 example: example.o
 	$(CXX) $(LIBS) -L. -lCaenDigitizerSiLab -lCAENDigitizer $(LDFLAGS)  $^ -o $@
 
 example.o : example.cxx
+	$(CXX) $(INCLUDES) $(CXXFLAGS) -c  $^ -o $@
+
+rda: rda.o
+	$(CXX) $(LIBS) -L. -lCaenDigitizerSiLab -lCAENDigitizer $(LDFLAGS)  $^ -o $@
+
+rda.o : rda.cxx
 	$(CXX) $(INCLUDES) $(CXXFLAGS) -c  $^ -o $@
 
 

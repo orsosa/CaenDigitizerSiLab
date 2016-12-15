@@ -71,7 +71,8 @@ public:
   int32_t waitTempStabilization(){return 0;}
   int32_t getTempMeanVar();
   uint32_t chTemp;
-  int32_t setCoincidence(int32_t ch0=0, int32_t ch1=1, int32_t wd=2);//wd 16 ns
+  int32_t setCoincidence(int32_t ch0=0);//wd 4 ns
+  int32_t setMajorCoincidence(int32_t blkmask=0x0e, int32_t wd=1,int32_t level=0);//wd 8 ns
   int32_t readTemp(int32_t ch)
   {
     ret = CAEN_DGTZ_ReadTemperature(handle, ch, &chTemp);

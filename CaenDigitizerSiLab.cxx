@@ -55,14 +55,15 @@ int32_t CaenDigitizerSiLab::init()
   data = new TNtuple("data","amp (adc ch) and time (nsample)",branches.Data() );
     
   //  trigthresh = th2int(0.5);//threshold in volts.
-  trigthresh=15200;
+  //trigthresh=15200;
+  trigthresh=15000;
+ 
   std::cout<<"trihthreshold: "<<trigthresh<<std::endl;
   for (int32_t k=0;k<MaxNCh;k++)
   {
       ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
       //ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,k,trigthresh);                /* Set selfTrigger threshold */
       ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,k,trigthresh);                  /* Set selfTrigger threshold */
-      
       ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnFallingEdge);
       //ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnRisingEdge);
   }
@@ -103,13 +104,14 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t st
   uint32_t dat=0;
   ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
   if (!automatic){
-    ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(3<<6)); //Adjacent channels paired.
+    // ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(3<<6)); //Adjacent channels paired.
+    ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(3<<0)); //Adjacent channels paired.
   }
-  setCoincidence(6,7);
+  setCoincidence(6);
   startSWAcq();
 
   ret = CAEN_DGTZ_ReadRegister(handle,0x1084,&dat);
-  printf("\nline %d, reg: %x\n",__LINE__,dat);
+  //printf("\nline %d, reg: %x\n",__LINE__,dat);
   while (count < events
 	 )
   {		
@@ -189,28 +191,31 @@ int32_t CaenDigitizerSiLab::storeData()
   return 0;
 }
 
-int32_t  CaenDigitizerSiLab::setCoincidence(int32_t ch0,int32_t ch1,int32_t wd)
+int32_t  CaenDigitizerSiLab::setCoincidence(int32_t ch0)
 {
-  
+  if (ch0%2!=0)
+  {
+    printf("Coincidence not possible, use only with even channels\n");
+    //raise(SIGINT);
+  }
   uint32_t data=0;
-  //  uint32_t data=1<<ch0 | 1<<ch1;
-  //data |= wd<<20;
-  //data |= 1<<24;	
   uint32_t reg = 0x1084 | ch0<<8;
   ret = CAEN_DGTZ_ReadRegister(handle,reg,&data);
-  //printf("\nactual value\n");
-  //printf("\nregister: %x\n",reg);
-  //printf("\ndata: %x\n",data);
   uint32_t opt=0x0;//0: AND, 1: only n, 2: only n+1, 3: OR
   data = (data&~0x3) | (opt);
   ret = CAEN_DGTZ_WriteRegister(handle,reg,data);
-  //ret = CAEN_DGTZ_ReadRegister(handle,reg,&data);
   ret = CAEN_DGTZ_ReadRegister(handle,reg,&data);
-  //printf("\nupdated value\n");
-  //printf("\nregister: %x\n",reg);
-  //printf("\ndata: %x\n",data);  
-  
-  //  ret = CAEN_DGTZ_WriteRegister(handle,0x1684,data);
+  return ret;
+}
+
+int32_t  CaenDigitizerSiLab::setMajorCoincidence(int32_t blkmask, int32_t wd,int32_t level)
+{
+  uint32_t data=0;
+  uint32_t reg = 0x810C;
+  ret = CAEN_DGTZ_ReadRegister(handle,reg,&data);
+  data = (data&~0xF&(0xF<<20)&(0x7<<24)) | (blkmask&0xF) | ((wd&0xF)<<20) | ((level&0x7)<<24);
+  ret = CAEN_DGTZ_WriteRegister(handle,reg,data);
+  ret = CAEN_DGTZ_ReadRegister(handle,reg,&data);
   return ret;
 }
 
