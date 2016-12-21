@@ -55,7 +55,7 @@ int32_t CaenDigitizerSiLab::init()
   data = new TNtuple("data","amp (adc ch) and time (nsample)",branches.Data() );
     
   //  trigthresh = th2int(0.5);//threshold in volts.
-  trigthresh=15200;//-1.94160868846080525e-02 V (~ 4 ph.e.)
+  trigthresh=15000;//-1.94160868846080525e-02 V (~ 8 ph.e.)
   std::cout<<"trihthreshold: "<<trigthresh<<std::endl;
   for (int32_t k=0;k<MaxNCh;k++)
   {
@@ -103,13 +103,17 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t st
   ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
   if (!automatic){
     // ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(3<<6)); //Adjacent channels paired.
-    ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(3<<0)); //Adjacent channels paired.
+    ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(0x3f<<2)); //Adjacent channels paired.
   }
+
+  setCoincidence(2);
+  setCoincidence(4);
   setCoincidence(6);
+  setMajorCoincidence(0xe,1,0);
   startSWAcq();
 
-  ret = CAEN_DGTZ_ReadRegister(handle,0x1084,&dat);
-  //printf("\nline %d, reg: %x\n",__LINE__,dat);
+  ret = CAEN_DGTZ_ReadRegister(handle,0x810C,&dat);
+  printf("\nline %d, reg: %x\n",__LINE__,dat);
   while (count < events
 	 )
   {		
