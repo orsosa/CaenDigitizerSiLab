@@ -53,10 +53,12 @@ int32_t CaenDigitizerSiLab::init()
   branches.Append(":time:event");
   ofile = new TFile("data_from_digitizer.root","recreate");
   data = new TNtuple("data","amp (adc ch) and time (nsample)",branches.Data() );
-    
+  //adc2mv -> (ADC*2.0/( (1<<14) - 1.0 ) + 2.0*0x1000/0xffff - 1.0 -1.0)*1000 
   //  trigthresh = th2int(0.5);//threshold in volts.
-  trigthresh=15000;//-1.94160868846080525e-02 V (~ 8 ph.e.)
-  std::cout<<"trihthreshold: "<<trigthresh<<std::endl;
+  //trigthresh=15318;
+  trigthresh=mV2adc(-5);
+  //trigthresh=15000;//-43mV
+  std::cout<<"trigthreshold: "<<trigthresh<<std::endl;
   for (int32_t k=0;k<MaxNCh;k++)
   {
       ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
@@ -87,6 +89,29 @@ int32_t CaenDigitizerSiLab::init()
   return 0;
 }
 
+
+int32_t CaenDigitizerSiLab::setTrigADC(int32_t trigthresh)
+{
+  std::cout<<"trigthreshold: "<<trigthresh<<std::endl;
+  for (int32_t k=0;k<MaxNCh;k++)
+  {
+      ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
+      ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,k,trigthresh);                  /* Set selfTrigger threshold */
+      ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnFallingEdge);
+      //ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnRisingEdge);
+  }
+  return 0;
+}
+
+
+int32_t CaenDigitizerSiLab::setTrigmV(float mV)
+{
+  trigthresh=mV2adc(mV);
+  setTrigADC(trigthresh);
+  return 0;
+}
+
+
 int32_t CaenDigitizerSiLab::getInfo()
 {
   ret = CAEN_DGTZ_GetInfo(handle, &BoardInfo);
@@ -102,14 +127,16 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t st
   uint32_t dat=0;
   ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
   if (!automatic){
-    // ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(3<<6)); //Adjacent channels paired.
-    ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(0x3f<<2)); //Adjacent channels paired.
+    //ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(3<<6)); //Adjacent channels paired.
+    //ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(0x3f<<2)); //Adjacent channels paired.
+    ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,0x3<<0); 
   }
-
-  setCoincidence(2);
-  setCoincidence(4);
-  setCoincidence(6);
-  setMajorCoincidence(0xe,1,0);
+  
+  setCoincidence(0);
+  //setCoincidence(2);
+  //setCoincidence(4);
+  //setCoincidence(6);
+  //setMajorCoincidence(0xe,1,0);
   startSWAcq();
 
   ret = CAEN_DGTZ_ReadRegister(handle,0x810C,&dat);
@@ -220,7 +247,6 @@ int32_t  CaenDigitizerSiLab::setMajorCoincidence(int32_t blkmask, int32_t wd,int
   ret = CAEN_DGTZ_ReadRegister(handle,reg,&data);
   return ret;
 }
-
 
 CaenDigitizerSiLab::~CaenDigitizerSiLab()
 {

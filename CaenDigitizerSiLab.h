@@ -71,8 +71,13 @@ public:
   int32_t waitTempStabilization(){return 0;}
   int32_t getTempMeanVar();
   uint32_t chTemp;
+  int32_t setTrigADC(int32_t trigthresh);
+  int32_t setTrigmV(float mV);
   int32_t setCoincidence(int32_t ch0=0);//wd 4 ns
   int32_t setMajorCoincidence(int32_t blkmask=0x0e, int32_t wd=1,int32_t level=0);//wd 8 ns
+  float  adc2mV(int32_t adc) {return  (adc*MaxVpp/( (1<<NBit) - 1.0 ) -1.0 + MaxVpp*kOffset/0xffff - 1.0 )*1000;}
+  int32_t  mV2adc(float mV) {return ( mV/1000.0 + 2.0 -  MaxVpp*kOffset/(float)0xffff )*( (1<<NBit) - 1.0 )/(float)MaxVpp;}
+  
   int32_t readTemp(int32_t ch)
   {
     ret = CAEN_DGTZ_ReadTemperature(handle, ch, &chTemp);
