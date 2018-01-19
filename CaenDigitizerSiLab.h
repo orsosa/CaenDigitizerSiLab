@@ -44,7 +44,7 @@ public:
   CAEN_DGTZ_AcqMode_t acqmode;
   int32_t handler;
   char *buffer;
-  char *evtptr; 
+  char *evtptr;
   int32_t kSamples;
   bool kDoCalibration;
   TFile *ofile;
@@ -56,8 +56,8 @@ public:
   float *storedVarTemp;
   int32_t kNSamplesTemp;
   float kDtTemp;
-  
-  
+
+
 public:
  CaenDigitizerSiLab() : kPolarizationType(0), kEnableMask(0xff), kSamples(100), kDoCalibration(kFALSE) {init();}
  CaenDigitizerSiLab(int8_t p, uint32_t em, int32_t s, bool docal): kPolarizationType(p), kEnableMask(em), kSamples(s), kDoCalibration(docal) {init();}
@@ -77,13 +77,13 @@ public:
   int32_t setMajorCoincidence(int32_t blkmask=0x0e, int32_t wd=1,int32_t level=0);//wd 8 ns
   float  adc2mV(int32_t adc) {return  (adc*MaxVpp/( (1<<NBit) - 1.0 ) -1.0 + MaxVpp*kOffset/0xffff - 1.0 )*1000;}
   int32_t  mV2adc(float mV) {return ( mV/1000.0 + 2.0 -  MaxVpp*kOffset/(float)0xffff )*( (1<<NBit) - 1.0 )/(float)MaxVpp;}
-  
+
   int32_t readTemp(int32_t ch)
   {
     ret = CAEN_DGTZ_ReadTemperature(handle, ch, &chTemp);
     return 0;
   }
-  
+
   int32_t readTempAll(bool print=true)
   {
     std::cout<<"ch\ttemp (°C)\n";
@@ -142,9 +142,12 @@ public:
       ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
     calibrate();
   }
-  void setNSamples(int32_t nsamples=100)
+
+  void setNSamples(int32_t nsamples=50)
   {
     kSamples=nsamples;
+    ret = CAEN_DGTZ_SetRecordLength(handle,kSamples);
+    std::cout<<"New number of samples per aqc = "<<kSamples<<std::endl;
   }
 
   void calibrate()
@@ -156,7 +159,7 @@ public:
     std::cout<<"cal. ret: "<<ret<<std::endl;
     sleep(5);
   }
-  
+
 
 ClassDef(CaenDigitizerSiLab,1)
 };
