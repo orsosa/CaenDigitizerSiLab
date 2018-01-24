@@ -20,6 +20,7 @@ TBenchmark *bench;
 void signalHandler(int)
 {
   dig->storeData();
+  dig->stopSWAcq();
   delete dig;
   bench->Show("example");
   delete bench;
@@ -54,7 +55,7 @@ int main()
   dig->setNSamples(100);//samples por evento
   dig->setTrigmV(50);//threshold en milivolts
 
-  int bunch_size=10; //numero de eventos
+  int bunch_size=100; //numero de eventos
   int NBunch=1; //numero de tuplas guardadas¿?
 
   //Medición

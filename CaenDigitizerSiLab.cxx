@@ -181,7 +181,7 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t st
   }
 
   std::cout<<std::endl;
-  ret = CAEN_DGTZ_SWStopAcquisition(handle);
+  stopSWAcq();
   return 0;
 }
 

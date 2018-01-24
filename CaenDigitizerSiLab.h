@@ -72,6 +72,7 @@ public:
   int32_t getInfo();
   int32_t getPedestal(int32_t samples){return 0;}
   CAEN_DGTZ_ErrorCode  startSWAcq(){ret = CAEN_DGTZ_SWStartAcquisition(handle); return ret;}
+  CAEN_DGTZ_ErrorCode  stopSWAcq(){ret = CAEN_DGTZ_SWStopAcquisition(handle); return ret;}
   int32_t readEvents(int32_t evenst=100,bool automatic=kTRUE, int32_t start_event=0);
   int32_t storeData();
   int32_t waitTempStabilization(){return 0;}
