@@ -1,6 +1,5 @@
 # CaenDigitizerSiLab
 C++ shared Library to use caen digitizers coupled with root.
-muy bien.
 
 To correctly use this library, edit your .bashrc file writting this line:
 

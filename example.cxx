@@ -34,13 +34,23 @@ int main()
   bench = new TBenchmark();
   bench->Start("example");
 
+  int32_t model;
+  std::cout<<"\nModel (5730 or 5724): ";
+  std::cin>>model;
+  std::cout<<std::endl;
+
+  int32_t polarization;
+  std::cout<<"\nPolarizarion: (1, 0 or -1): ";
+  std::cin>>polarization;
+  std::cout<<std::endl;
+
   dig = new CaenDigitizerSiLab();
-  dig->setModel(5730);
+  dig->setModel(model);
   dig->init();
   dig->getInfo();
 
 
-  dig->setPolarizationType(0);//rango de -1V hasta 1V
+  dig->setPolarizationType(polarization);//rango de -1V hasta 1V
   dig->setNSamples(100);//samples por evento
   dig->setTrigmV(50);//threshold en milivolts
 
