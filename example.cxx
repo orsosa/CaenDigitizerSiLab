@@ -35,12 +35,16 @@ int main()
   bench->Start("example");
 
   dig = new CaenDigitizerSiLab();
+  dig->setModel(5730);
+  dig->init();
+  dig->getInfo();
+
 
   dig->setPolarizationType(0);//rango de -1V hasta 1V
   dig->setNSamples(100);//samples por evento
   dig->setTrigmV(50);//threshold en milivolts
 
-  int bunch_size=100; //numero de eventos
+  int bunch_size=10; //numero de eventos
   int NBunch=1; //numero de tuplas guardadas¿?
 
   //Medición
@@ -53,7 +57,12 @@ int main()
     dig->calibrate();
   }
 
+  dig->finish();
 
   bench->Show("example");
+
+  delete dig;
+  delete bench;
+
   return 0;
 }

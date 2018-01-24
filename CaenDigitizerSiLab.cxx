@@ -4,15 +4,20 @@ ClassImp(CaenDigitizerSiLab)
 
 int32_t CaenDigitizerSiLab::init()
 {
-  meanTemp= new float[MaxNCh];
-  varTemp= new float[MaxNCh];
-  storedMeanTemp= new float[MaxNCh];
-  storedVarTemp= new float[MaxNCh];
-  tempFile.open("temp_measurements.txt");
+  if (kTempSupported)
+  {
+    meanTemp= new float[MaxNCh];
+    varTemp= new float[MaxNCh];
+    storedMeanTemp= new float[MaxNCh];
+    storedVarTemp= new float[MaxNCh];
+    tempFile.open("temp_measurements.txt");
+    kNSamplesTemp=30; // number of samples to determine mean an var. of channel temperature.
+    kDtTemp=1;// samplinbg time for temperature measurements.
+  }
+
 
   NCh=MaxNCh;
-  kNSamplesTemp=30; // number of samples to determine mean an var. of channel temperature.
-  kDtTemp=1;// samplinbg time for temperature measurements.
+
   switch (kPolarizationType)
   {
   case 0:
@@ -139,9 +144,8 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t st
   startSWAcq();
 
   ret = CAEN_DGTZ_ReadRegister(handle,0x810C,&dat);
-  printf("\nline %d, reg: %x\n",__LINE__,dat);
-  while (count < events
-	 )
+  //printf("\n hola line %d, reg: %x\n",__LINE__,dat);
+  while (count < events)
   {
     if (automatic)
       ret = CAEN_DGTZ_SendSWtrigger(handle);
@@ -160,49 +164,61 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t st
 
       for (int32_t j=0;j<Evt->ChSize[0];j++)
       {
-	for (int32_t k=0;k<NCh;k++)
-	{
-	  data_arr[k] = (int32_t)Evt->DataChannel[k][j];
-	}
-	data_arr[NCh]=j;
-	data_arr[NCh+1]=count+i+start_event;
-	data->Fill(data_arr);
+	       for (int32_t k=0;k<NCh;k++)
+	        {
+	           data_arr[k] = (int32_t)Evt->DataChannel[k][j];
+	        }
+	        data_arr[NCh]=j;
+	        data_arr[NCh+1]=count+i+start_event;
+	        data->Fill(data_arr);
       }
+
       ret = CAEN_DGTZ_FreeEvent(handle,(void **)&Evt);
     }
+
     delete data_arr;
     count +=numEvents;
   }
+
   std::cout<<std::endl;
+  ret = CAEN_DGTZ_SWStopAcquisition(handle);
   return 0;
 }
 
 int32_t CaenDigitizerSiLab::getTempMeanVar()
   {
-
-    for (int32_t i =0; i<MaxNCh; i++)
-    {
-      meanTemp[i]=0;
-      varTemp[i]=0;
-    }
-
-    for (int32_t k=0;k<kNSamplesTemp;k++)
+    if (kTempSupported)
     {
       for (int32_t i =0; i<MaxNCh; i++)
       {
-	if ((kEnableMask>>i)&0x1)
-        {
-	  readTemp(i);
-	  meanTemp[i]+=chTemp;
-	  varTemp[i]+=chTemp*chTemp;
-	}
+        meanTemp[i]=0;
+        varTemp[i]=0;
       }
-      sleep(kDtTemp);
+
+      for (int32_t k=0;k<kNSamplesTemp;k++)
+      {
+        for (int32_t i =0; i<MaxNCh; i++)
+        {
+  	       if ((kEnableMask>>i)&0x1)
+           {
+          	  readTemp(i);
+          	  meanTemp[i]+=chTemp;
+          	  varTemp[i]+=chTemp*chTemp;
+  	       }
+         }
+         sleep(kDtTemp);
+      }
+
+      for (int32_t i =0; i<MaxNCh; i++)
+      {
+        meanTemp[i]/=kNSamplesTemp;
+        varTemp[i]=(varTemp[i]/kNSamplesTemp-meanTemp[i]*meanTemp[i]);
+      }
     }
-    for (int32_t i =0; i<MaxNCh; i++)
+    else
     {
-      meanTemp[i]/=kNSamplesTemp;
-      varTemp[i]=(varTemp[i]/kNSamplesTemp-meanTemp[i]*meanTemp[i]);
+      std::cout<<"Temperature measurement not supported"<<std::endl;
+      return -1;
     }
 
     return 0;
@@ -247,14 +263,29 @@ int32_t  CaenDigitizerSiLab::setMajorCoincidence(int32_t blkmask, int32_t wd,int
   return ret;
 }
 
+int32_t CaenDigitizerSiLab::finish()
+{
+  ret = CAEN_DGTZ_FreeReadoutBuffer(&buffer);	//Frees memory allocated by the CAEN_DGTZ_MallocReadoutBuffer
+  std::cout<<"freebuffer ret.: "<<ret<<std::endl;
+	if (ret==0)
+  {
+    ret = CAEN_DGTZ_CloseDigitizer(handle);
+    std::cout<<"closeDigitizer ret.: "<<ret<<std::endl;
+    return ret;
+  }
+  return -1;
+}
 CaenDigitizerSiLab::~CaenDigitizerSiLab()
 {
-  delete [] meanTemp;
-  delete [] varTemp;
-  delete [] storedMeanTemp;
-  delete [] storedVarTemp;
+  if (kTempSupported)
+  {
+    delete [] meanTemp;
+    delete [] varTemp;
+    delete [] storedMeanTemp;
+    delete [] storedVarTemp;
+    tempFile.close();
+  }
   ofile->Close();
-  tempFile.close();
 
   //  CAEN_DGTZ_FreeEvent(handle,(void **)&Evt);
 }
