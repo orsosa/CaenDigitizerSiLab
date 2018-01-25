@@ -74,7 +74,7 @@ int32_t CaenDigitizerSiLab::init()
 
 
   ret = CAEN_DGTZ_SetSWTriggerMode(handle, triggermode);//modo trigger
-  ret = CAEN_DGTZ_SetPostTriggerSize(handle,2);
+  ret = CAEN_DGTZ_SetPostTriggerSize(handle,60);
   //% a grabar por cada trigger del record length
   ret = CAEN_DGTZ_SetAcquisitionMode(handle, acqmode);			// modo de adquisicion
   ret = CAEN_DGTZ_SetMaxNumEventsBLT(handle,1);//numero maximo de eventos por transferencia
@@ -167,6 +167,7 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t st
 	       for (int32_t k=0;k<NCh;k++)
 	        {
 	           data_arr[k] = (int32_t)Evt->DataChannel[k][j];
+             data_arr[k] = adc2mV(data_arr[k]);
 	        }
 	        data_arr[NCh]=j;
 	        data_arr[NCh+1]=count+i+start_event;

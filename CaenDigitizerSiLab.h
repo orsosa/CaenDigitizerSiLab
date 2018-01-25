@@ -82,7 +82,7 @@ public:
   int32_t setTrigmV(float mV);
   int32_t setCoincidence(int32_t ch0=0);//wd 4 ns
   int32_t setMajorCoincidence(int32_t blkmask=0x0e, int32_t wd=1,int32_t level=0);//wd 8 ns
-  float  adc2mV(int32_t adc) {return  (adc*MaxVpp/( (1<<NBit) - 1.0 ) - MaxVpp*(1 - kOffset/0xffff ))*1000;}
+  Float_t  adc2mV(int32_t adc) {return  (adc/( (1<<NBit) - 1.0 ) - 1.0 + (float)kOffset/(float)0xffff )*MaxVpp*1000;}
   int32_t  mV2adc(float mV) {return ( mV/1000.0 + MaxVpp*(1 - kOffset/(float)0xffff ) )*( (1<<NBit) - 1.0 )/(float)MaxVpp;}
 
   //configura el model de digitizer a utilizar. Por defecto se utiliza el DT5730
@@ -213,6 +213,7 @@ public:
   {
     kSamples=nsamples;
     ret = CAEN_DGTZ_SetRecordLength(handle,kSamples);
+    ret = CAEN_DGTZ_SetPostTriggerSize(handle,60);
     std::cout<<"New number of samples per aqc = "<<kSamples<<std::endl;
   }
 

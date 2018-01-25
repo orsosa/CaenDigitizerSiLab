@@ -52,8 +52,8 @@ int main()
 
 
   dig->setPolarizationType(polarization);//rango de -1V hasta 1V
-  dig->setNSamples(100);//samples por evento
-  dig->setTrigmV(50);//threshold en milivolts
+  dig->setNSamples(600);//samples por evento
+  dig->setTrigmV(30);//threshold en milivolts
 
   int bunch_size=100; //numero de eventos
   int NBunch=1; //numero de tuplas guardadas¿?
