@@ -18,14 +18,18 @@ HEADERS := $(lib).h
 
 all: lib$(lib).so.1.0.1 link example
 
-example: example.o
+example: example.o configuration.o
 	$(CXX) $(LIBS) -L. -lCaenDigitizerSiLab -lCAENDigitizer $(LDFLAGS)  $^ -o $@
 
 example.o : example.cxx
 	$(CXX) $(INCLUDES) $(CXXFLAGS) -c  $^ -o $@
 
+configuration.o: configuration.C
+	$(CXX) $(INCLUDES) $(CXXFLAGS) -c  $^ -o $@
+		#$(CXX) -c -Wall -DLINUX -DUNIX $^ -o $@
+		#$(CXX) $(INCLUDES) -Wall -DLINUX -DUNIX -c $^ -o $@
 
-$(lib)Dict.cxx:  $(HEADERS) LinkDef.h
+$(lib)Dict.cxx:  configuration.h $(HEADERS) LinkDef.h
 	rootcling -f $(lib)Dict.cxx $^
 
 lib$(lib).so.1.0.1 : $(OBJS) $(lib)Dict.cxx

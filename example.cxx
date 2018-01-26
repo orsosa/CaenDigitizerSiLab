@@ -10,6 +10,7 @@
 
 
 #include "CaenDigitizerSiLab.h"
+#include "configuration.h"
 #include "TBenchmark.h"
 #include <signal.h>
 
@@ -35,15 +36,11 @@ int main()
   bench = new TBenchmark();
   bench->Start("example");
 
-  int32_t model;
-  std::cout<<"\nModel (5730 or 5724): ";
-  std::cin>>model;
-  std::cout<<std::endl;
-
-  int32_t polarization;
-  std::cout<<"\nPolarizarion: (1, 0 or -1): ";
-  std::cin>>polarization;
-  std::cout<<std::endl;
+  //Se lee el archivo config.conf para configurar el digitizer
+  if(readconfig("config.conf"))
+  	{
+  		printf("error al leer archivo de configuracion, tomando valores por defecto...");
+  	}
 
   dig = new CaenDigitizerSiLab();
   dig->setModel(model);
@@ -53,9 +50,9 @@ int main()
 
   dig->setPolarizationType(polarization);//rango de -1V hasta 1V
   dig->setNSamples(600);//samples por evento
-  dig->setTrigmV(30);//threshold en milivolts
+  dig->setTrigmV(100);//threshold en milivolts
 
-  int bunch_size=100; //numero de eventos
+  int bunch_size=100;  //numero de eventos
   int NBunch=1; //numero de tuplas guardadas¿?
 
   //Medición

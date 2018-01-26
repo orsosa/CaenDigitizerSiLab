@@ -96,7 +96,7 @@ int32_t CaenDigitizerSiLab::init()
 
 int32_t CaenDigitizerSiLab::setTrigADC(int32_t trigthresh)
 {
-  std::cout<<"trigthreshold: "<<trigthresh<<std::endl;
+  std::cout<<"trigthreshold: "<<adc2mV(trigthresh)<<std::endl;
   for (int32_t k=0;k<MaxNCh;k++)
   {
       ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);

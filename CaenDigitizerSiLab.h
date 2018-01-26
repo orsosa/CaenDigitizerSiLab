@@ -201,6 +201,7 @@ public:
             	break;
       case 1:
           	//kOffset=0xffff;
+            //kOffset=0xe3bf;
             kOffset=0xefff;
             //kOffset=16000;
       }
