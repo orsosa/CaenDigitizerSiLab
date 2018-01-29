@@ -64,8 +64,12 @@ int32_t CaenDigitizerSiLab::init()
   trigthresh=mV2adc(-5);
   //trigthresh=15000;//-43mV
   std::cout<<"trigthreshold: "<<trigthresh<<std::endl;
+
+  uint32_t dat=0;
+  uint32_t reg = 0x1088;
   for (int32_t k=0;k<MaxNCh;k++)
   {
+      ret = CAEN_DGTZ_ReadRegister(handle,(reg+k*0x100),&dat);
       ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
       ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,k,trigthresh);                  /* Set selfTrigger threshold */
       //ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnFallingEdge);
@@ -97,8 +101,10 @@ int32_t CaenDigitizerSiLab::init()
 int32_t CaenDigitizerSiLab::setTrigADC(int32_t trigthresh)
 {
   std::cout<<"trigthreshold: "<<adc2mV(trigthresh)<<std::endl;
+  uint32_t dat = 0;
   for (int32_t k=0;k<MaxNCh;k++)
   {
+      ret = CAEN_DGTZ_ReadRegister(handle,(0x1088+k*0x100),&dat);
       ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
       ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,k,trigthresh);                  /* Set selfTrigger threshold */
       //ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnFallingEdge);

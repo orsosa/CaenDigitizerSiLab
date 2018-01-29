@@ -216,8 +216,12 @@ public:
               kOffset=0xf7a3; //offset adaptado para que el cero calze con lo esperado
               //kOffset=0xffff;
       }
+    uint32_t dat = 0;
     for (int k =0; k<MaxNCh;k++)
+    {
+      ret = CAEN_DGTZ_ReadRegister(handle,(0x1088+k*0x100),&dat);
       ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
+    }
     calibrate();
   }
 
