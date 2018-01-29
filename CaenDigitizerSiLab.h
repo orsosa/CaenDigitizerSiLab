@@ -61,6 +61,7 @@ public:
   int32_t kModel;
   bool kTempSupported;
   bool kCalibrationSupported;
+  CAEN_DGTZ_TriggerPolarity_t kTriggerpolaritymode;
 
 
 public:
@@ -114,6 +115,19 @@ public:
     }
     std::cout<<msg<<"\nChannels: "<<MaxNCh<<"\nVpp = "<<MaxVpp<<"\nADC bits = "<<NBit<<"\r"<<std::endl;
     return 0;
+  }
+
+  void setTriggerPolarity(int32_t mode)
+  {
+      if (mode == 1)
+        kTriggerpolaritymode = CAEN_DGTZ_TriggerOnRisingEdge;
+      else if (mode == 0)
+        kTriggerpolaritymode = CAEN_DGTZ_TriggerOnFallingEdge;
+      else
+        {
+          std::cout<<"Wrong trigger polarity mode. Setting default: Risign edge";
+          kTriggerpolaritymode = CAEN_DGTZ_TriggerOnRisingEdge;
+        }
   }
 
   int32_t readTemp(int32_t ch)
@@ -196,25 +210,22 @@ public:
             	kOffset=0x7FFF;
             	break;
       case -1:
-            	//kOffset=0x0000;
-              kOffset=0x1000;
+            	kOffset=0x08c0; //offset adaptado para que el cero calze con lo esperado
             	break;
       case 1:
-          	//kOffset=0xffff;
-            //kOffset=0xe3bf;
-            kOffset=0xefff;
-            //kOffset=16000;
+              kOffset=0xf7a3; //offset adaptado para que el cero calze con lo esperado
+              //kOffset=0xffff;
       }
     for (int k =0; k<MaxNCh;k++)
       ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
     calibrate();
   }
 
-  void setNSamples(int32_t nsamples=50)
+  void setNSamples(int32_t nsamples=50, int32_t trigger_size=60)
   {
     kSamples=nsamples;
     ret = CAEN_DGTZ_SetRecordLength(handle,kSamples);
-    ret = CAEN_DGTZ_SetPostTriggerSize(handle,60);
+    ret = CAEN_DGTZ_SetPostTriggerSize(handle,trigger_size);
     std::cout<<"New number of samples per aqc = "<<kSamples<<std::endl;
   }
 

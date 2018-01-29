@@ -11,10 +11,17 @@
 #include <unistd.h>
 #include <string.h>
 
+
 //extern int USB_HV;
 //extern int USB_ard;
 extern int model;
 extern int polarization;
+extern int vthreshold;
+extern int acqsamples;
+extern int nevents;
+extern int bunches;
+extern int ptriggersize;
+extern int triggerpolaritymode;
 //extern char filename[200];
 
 

@@ -39,21 +39,22 @@ int main()
   //Se lee el archivo config.conf para configurar el digitizer
   if(readconfig("config.conf"))
   	{
-  		printf("error al leer archivo de configuracion, tomando valores por defecto...");
+  		printf("Error al leer archivo de configuracion, tomando valores por defecto...");
   	}
 
   dig = new CaenDigitizerSiLab();
   dig->setModel(model);
+  dig->setTriggerPolarity(triggerpolaritymode);
   dig->init();
   dig->getInfo();
 
 
   dig->setPolarizationType(polarization);//rango de -1V hasta 1V
-  dig->setNSamples(600);//samples por evento
-  dig->setTrigmV(100);//threshold en milivolts
+  dig->setNSamples(acqsamples, ptriggersize);//samples por evento
+  dig->setTrigmV(vthreshold);//threshold en milivolts
 
-  int bunch_size=100;  //numero de eventos
-  int NBunch=1; //numero de tuplas guardadas¿?
+  int bunch_size=nevents;  //numero de eventos
+  int NBunch=bunches; //numero de tuplas guardadas¿?
 
   //Medición
   for (int k=0;k<NBunch;k++)

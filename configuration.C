@@ -1,8 +1,15 @@
 #include "configuration.h"
 
 
-int model=5730;
-int polarization=0; //in uA
+int model = 5730;
+int polarization = 0;
+int vthreshold = 50; //in mV
+int acqsamples = 100;
+int nevents = 100;
+int bunches = 1;
+int ptriggersize = 60;
+int triggerpolaritymode = 1;
+
 char buf[200];
 //char filename[200]="predeterminado";
 
@@ -50,6 +57,18 @@ int readconfig(char *file){
                                 model=atof(strtok(NULL," "));
                         if(0==strcmp(param,"polarization"))
                                 polarization=atof(strtok(NULL," "));
+                        if(0==strcmp(param,"vthreshold"))
+                                vthreshold=atof(strtok(NULL," "));
+                        if(0==strcmp(param,"acqsamples"))
+                                acqsamples=atof(strtok(NULL," "));
+                        if(0==strcmp(param,"nevents"))
+                                nevents=atof(strtok(NULL," "));
+                        if(0==strcmp(param,"bunches"))
+                                bunches=atof(strtok(NULL," "));
+                        if(0==strcmp(param,"ptriggersize"))
+                                ptriggersize=atof(strtok(NULL," "));
+                        if(0==strcmp(param,"triggerpolaritymode"))
+                                triggerpolaritymode=atof(strtok(NULL," "));
                 }
         }
         close(fdin);
