@@ -27,6 +27,6 @@ extern int triggerpolaritymode;
 
 extern char buf[200];
 int ReadUntil(int fd, char tok);
-int readconfig(char *file);
+int readconfig(const char *file);
 
 #endif

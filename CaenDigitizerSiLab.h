@@ -19,6 +19,8 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TNtuple.h"
+#include <sys/time.h>
+
 
 //#define MaxVpp 2.0
 //#define NBit 14
@@ -76,6 +78,7 @@ public:
   CAEN_DGTZ_ErrorCode  startSWAcq(){ret = CAEN_DGTZ_SWStartAcquisition(handle); return ret;}
   CAEN_DGTZ_ErrorCode  stopSWAcq(){ret = CAEN_DGTZ_SWStopAcquisition(handle); return ret;}
   int32_t readEvents(int32_t evenst=100,bool automatic=kTRUE, int32_t start_event=0);
+  int32_t readEvents(int32_t maxEvents,bool automatic,int32_t start_event,double tm);
   int32_t storeData();
   int32_t waitTempStabilization(){return 0;}
   int32_t getTempMeanVar();
@@ -86,6 +89,9 @@ public:
   int32_t setMajorCoincidence(int32_t blkmask=0x0e, int32_t wd=1,int32_t level=0);//wd 8 ns
   Float_t  adc2mV(int32_t adc) {return  (adc/( (1<<NBit) - 1.0 ) - 1.0 + (float)kOffset/(float)0xffff )*MaxVpp*1000;}
   int32_t  mV2adc(float mV) {return ( mV/1000.0 + MaxVpp*(1 - kOffset/(float)0xffff ) )*( (1<<NBit) - 1.0 )/(float)MaxVpp;}
+  int32_t newFile(const char* name);
+  int32_t closeLastFile();
+
 
   //configura el model de digitizer a utilizar. Por defecto se utiliza el DT5730
   //Para configurar, se reciben los 4 numeros del digitizer. ej: 'DT5730' => 5730
@@ -134,7 +140,7 @@ public:
         }
   }
 
-  void setTime2Nsamples(Float_t tm)
+  void setTime2Nsamples(Float_t tm, int32_t trigger_size=60)
   {
     kSamples = (tm/kSamplingTime);
     ret = CAEN_DGTZ_SetRecordLength(handle,kSamples);

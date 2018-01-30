@@ -57,6 +57,7 @@ int main()
   int NBunch=bunches; //numero de grupos de eventos
 
   //Medición
+  dig->newFile("data_from_digitizer.root");
   for (int k=0;k<NBunch;k++)
   {
     std::cout<<"On bunch: "<<k<<std::endl<<std::endl;
@@ -65,6 +66,7 @@ int main()
     dig->storeTempAll();
     dig->calibrate();
   }
+  dig->closeLastFile();
 
   dig->finish();
 

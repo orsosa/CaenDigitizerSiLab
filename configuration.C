@@ -42,7 +42,7 @@ int ReadUntil(int fd, char tok){
                 return i;
 }
 
-int readconfig(char *file){
+int readconfig(const char *file){
         int fdin;
         char *param;
         if((fdin=open(file,O_RDONLY))==-1){
