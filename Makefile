@@ -40,7 +40,7 @@ lib$(lib).so.1.0.1 : $(OBJS) $(lib)Dict.cxx
 
 .PHONY: CLEAN link
 clean:
-	rm -f *.o *.d
+	rm -f *.o *.d *.pcm *.root *.txt CaenDigitizerSiLabDict.cxx example
 
 link:
 	ln -sf libCaenDigitizerSiLab.so.1.0.1 libCaenDigitizerSiLab.so.1

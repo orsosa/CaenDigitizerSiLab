@@ -62,6 +62,7 @@ public:
   bool kTempSupported;
   bool kCalibrationSupported;
   CAEN_DGTZ_TriggerPolarity_t kTriggerpolaritymode;
+  Float_t kSamplingTime;
 
 
 public:
@@ -99,6 +100,7 @@ public:
                   msg = "Model DT5730";
                   kTempSupported = kTRUE;
                   kCalibrationSupported = kTRUE;
+                  kSamplingTime = 0.000000002;
                   break;
       case 5724:  MaxNCh = 4;
                   MaxVpp = 2.25;
@@ -106,12 +108,14 @@ public:
                   msg = "Model DT5724";
                   kTempSupported = kFALSE;
                   kCalibrationSupported = kFALSE;
+                  kSamplingTime = 0.0000001;
                   break;
       default:    MaxNCh = 8;
                   MaxVpp = 2;
                   NBit = 14;
                   kTempSupported = kTRUE;
                   kCalibrationSupported = kTRUE;
+                  kSamplingTime = 0.000000002;
     }
     std::cout<<msg<<"\nChannels: "<<MaxNCh<<"\nVpp = "<<MaxVpp<<"\nADC bits = "<<NBit<<"\r"<<std::endl;
     return 0;
@@ -128,6 +132,14 @@ public:
           std::cout<<"Wrong trigger polarity mode. Setting default: Risign edge";
           kTriggerpolaritymode = CAEN_DGTZ_TriggerOnRisingEdge;
         }
+  }
+
+  void setTime2Nsamples(Float_t tm)
+  {
+    kSamples = (tm/kSamplingTime);
+    ret = CAEN_DGTZ_SetRecordLength(handle,kSamples);
+    ret = CAEN_DGTZ_SetPostTriggerSize(handle,trigger_size);
+    std::cout<<"New number of samples per aqc = "<<kSamples<<std::endl;
   }
 
   int32_t readTemp(int32_t ch)

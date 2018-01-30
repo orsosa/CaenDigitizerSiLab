@@ -49,12 +49,12 @@ int main()
   dig->getInfo();
 
 
-  dig->setPolarizationType(polarization);//rango de -1V hasta 1V
-  dig->setNSamples(acqsamples, ptriggersize);//samples por evento
+  dig->setPolarizationType(polarization);//rango de polarizacion
+  dig->setNSamples(acqsamples, ptriggersize);//samples por evento y post trigger size
   dig->setTrigmV(vthreshold);//threshold en milivolts
 
   int bunch_size=nevents;  //numero de eventos
-  int NBunch=bunches; //numero de tuplas guardadas¿?
+  int NBunch=bunches; //numero de grupos de eventos
 
   //Medición
   for (int k=0;k<NBunch;k++)
