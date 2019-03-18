@@ -9,6 +9,7 @@ int nevents = 100;
 int bunches = 1;
 int ptriggersize = 60;
 int triggerpolaritymode = 1;
+int timeout = 10;
 
 char buf[200];
 //char filename[200]="predeterminado";
@@ -69,6 +70,8 @@ int readconfig(const char *file){
                                 ptriggersize=atof(strtok(NULL," "));
                         if(0==strcmp(param,"triggerpolaritymode"))
                                 triggerpolaritymode=atof(strtok(NULL," "));
+                        if(0==strcmp(param,"timeout"))
+                                timeout=atof(strtok(NULL," "));
                 }
         }
         close(fdin);

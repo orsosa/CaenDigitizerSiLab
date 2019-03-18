@@ -62,7 +62,7 @@ int main()
     for (int k=0;k<NBunch;k++)
     {
       std::cout<<"On bunch: "<<k<<std::endl<<std::endl;
-      dig->readEvents(bunch_size,false,k*bunch_size); //lectura con selftrigger
+      dig->readEvents(bunch_size,false,k*bunch_size,timeout); //lectura con selftrigger y timeout
       dig->storeData();
       dig->storeTempAll();
       dig->calibrate();
