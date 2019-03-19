@@ -18,19 +18,25 @@ CaenDigitizerSiLab *dig;
 TBenchmark *bench;
 
 //Funcion para cerrar correctamente el script con ctrl+c
-void signalHandler(int)
+void signalHandler(int sig)
 {
   dig->storeData();
   dig->stopSWAcq();
   delete dig;
   bench->Show("example");
   delete bench;
-  exit(0);
+  exit(sig);
 }
 
 int main()
 {
-  signal(SIGINT , signalHandler);
+  //signal(SIGINT , signalHandler);
+
+  struct sigaction act;
+  act.sa_handler = signalHandler;
+  sigemptyset(&act.sa_mask);
+  act.sa_flags = 0;
+  
 
   //benchmark mide el desempeño del programa, no es vital
   bench = new TBenchmark();
@@ -59,6 +65,7 @@ int main()
 
     //Medición
     dig->newFile("data_from_digitizer.root");
+    sigaction(SIGINT, &act, 0); 
     for (int k=0;k<NBunch;k++)
     {
       std::cout<<"On bunch: "<<k<<std::endl<<std::endl;
