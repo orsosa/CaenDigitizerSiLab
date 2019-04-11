@@ -68,6 +68,7 @@ int32_t CaenDigitizerSiLab::init()
   }
 
 
+  ret = CAEN_DGTZ_WriteRegister(handle, 0x811C, 0x000001); // Set Trig-In Trig-Out as TTL (not NIM)
   ret = CAEN_DGTZ_SetSWTriggerMode(handle, triggermode);//modo trigger
   ret = CAEN_DGTZ_SetPostTriggerSize(handle,60);
   //% a grabar por cada trigger del record length
@@ -144,7 +145,7 @@ int32_t CaenDigitizerSiLab::getInfo()
   return 0;
 }
 
-int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t start_event)
+int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t start_event, uint32_t triggerSource)
 {
   int32_t count=0;
   uint32_t dat=0;
@@ -152,7 +153,16 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t st
   if (!automatic){
     //ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(3<<6)); //Adjacent channels paired.
     //ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(0x3f<<2)); //Adjacent channels paired.
-    ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,0x1<<0);
+    if(triggerSource == 8){
+      ret = CAEN_DGTZ_SetExtTriggerInputMode(handle, CAEN_DGTZ_TRGMODE_ACQ_ONLY);
+    }
+    else if ((0<=triggerSource)&&(triggerSource<=7)){
+      ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,0x1<<triggerSource);
+    }
+    else{
+      printf("Invalid Trigger Source, setting Ch0 as default source.\n");
+      ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,0x1<<0);
+    }    
   }
 
   //setCoincidence(0);
@@ -205,7 +215,7 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t st
   return 0;
 }
 
-int32_t  CaenDigitizerSiLab::readEvents(int32_t maxEvents,bool automatic,int32_t start_event,double tm)
+int32_t  CaenDigitizerSiLab::readEvents(int32_t maxEvents,bool automatic,int32_t start_event,double tm, uint32_t triggerSource)
 {
   timeval ti,tf;
   double time_elapsed = 0.0;
@@ -215,7 +225,19 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t maxEvents,bool automatic,int32_t
   if (!automatic){
     //ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(3<<6)); //Adjacent channels paired.
     //ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(0x3f<<2)); //Adjacent channels paired.
-    ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,0x1<<0);
+    if(triggerSource == 8){
+      ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_DISABLED,0x00);
+      ret = CAEN_DGTZ_SetExtTriggerInputMode(handle, CAEN_DGTZ_TRGMODE_ACQ_ONLY);
+    }
+    else if ((0<=triggerSource)&&(triggerSource<=7)){
+      ret = CAEN_DGTZ_SetExtTriggerInputMode(handle, CAEN_DGTZ_TRGMODE_DISABLED);
+      ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,0x1<<triggerSource);
+    }
+    else{
+      printf("Invalid Trigger Source, setting Ch0 as default source.\n");
+      ret = CAEN_DGTZ_SetExtTriggerInputMode(handle, CAEN_DGTZ_TRGMODE_DISABLED);
+      ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(0x1<<0));
+    }
   }
 
   //setCoincidence(0);

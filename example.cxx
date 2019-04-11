@@ -37,7 +37,7 @@ int main()
   sigemptyset(&act.sa_mask);
   act.sa_flags = 0;
   
-
+  printf("Exit: Ctrl+\\\n");
   //benchmark mide el desempeño del programa, no es vital
   bench = new TBenchmark();
   bench->Start("example");
@@ -69,7 +69,7 @@ int main()
     for (int k=0;k<NBunch;k++)
     {
       std::cout<<"On bunch: "<<k<<std::endl<<std::endl;
-      dig->readEvents(bunch_size,false,k*bunch_size,timeout); //lectura con selftrigger y timeout
+      dig->readEvents(bunch_size,false,k*bunch_size,timeout,triggerSource); //lectura con selftrigger y timeout
       dig->storeData();
       dig->storeTempAll();
       dig->calibrate();

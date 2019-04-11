@@ -23,6 +23,7 @@ extern int bunches;
 extern int ptriggersize;
 extern int triggerpolaritymode;
 extern int timeout;
+extern int triggerSource;
 //extern char filename[200];
 
 
