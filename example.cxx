@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////  Desarrollado por Orlando Soto.
-////  Comentando, analizado y reparado por Jairo González.
-////  Documentación dispoible en:
+////  Comentado, analizado y reparado por Jairo González.
+////  Documentación disponible en:
 ////  http://silab.fis.utfsm.cl/wiki/Manuales_Equipos_Lab
 ////
 ////  SiLab 2018

@@ -243,13 +243,24 @@ public:
     calibrate();
   }
 
-  void setNSamples(int32_t nsamples=50, int32_t trigger_size=60)
+  void setNSamples(int32_t nsamples=50, uint32_t trigger_size=60)
   {
     kSamples=nsamples;
     ret = CAEN_DGTZ_SetRecordLength(handle,kSamples);
     ret = CAEN_DGTZ_SetPostTriggerSize(handle,trigger_size);
-    std::cout<<"New number of samples per aqc = "<<kSamples<<std::endl;
+    uint32_t configured_kSamples = 0;
+    ret = CAEN_DGTZ_GetRecordLength(handle, &configured_kSamples);
+    std::cout<<"New number of samples per aqc = "<<configured_kSamples<<std::endl;
+
+    uint32_t configured_trigger_size = 0;
+    ret = CAEN_DGTZ_GetPostTriggerSize(handle, &configured_trigger_size);
+    std::cout<<"New postTrigger Size= "<<configured_trigger_size<< "\% | Equal to: "<< kSamples*configured_trigger_size/100<<" samples."<<std::endl;
+    
+    ret = CAEN_DGTZ_FreeReadoutBuffer(&buffer);
+    ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
+  
   }
+
 
   void calibrate()
   {

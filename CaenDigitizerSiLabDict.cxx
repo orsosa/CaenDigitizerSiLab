@@ -160,7 +160,7 @@ namespace {
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 extern int __Cling_Autoloading_Map;
-class __attribute__((annotate("$clingAutoload$CaenDigitizerSiLab.h")))  CaenDigitizerSiLab;
+class __attribute__((annotate("$clingAutoload$CaenDigitizerSiLab.h")))  __attribute__((annotate("$clingAutoload$configuration.h")))  CaenDigitizerSiLab;
 )DICTFWDDCLS";
     static const char* payloadCode = R"DICTPAYLOAD(
 #line 1 "CaenDigitizerSiLabDict dictionary payload"

@@ -80,7 +80,8 @@ int32_t CaenDigitizerSiLab::init()
     printf("Errors during Digitizer Configuration.\n");
   }
 
-
+  //TESTING LINE
+  ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
 
 
   //localiza buffer pointer en la memoria
@@ -149,7 +150,7 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t st
 {
   int32_t count=0;
   uint32_t dat=0;
-  ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
+  //ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
   if (!automatic){
     //ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(3<<6)); //Adjacent channels paired.
     //ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(0x3f<<2)); //Adjacent channels paired.
@@ -198,7 +199,7 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t st
 	           data_arr[k] = (int32_t)Evt->DataChannel[k][j];
              data_arr[k] = adc2mV(data_arr[k]);
 	        }
-	        data_arr[NCh]=j;
+	        data_arr[NCh]=j*2; // Tiempo de sampling
 	        data_arr[NCh+1]=count+i+start_event;
 	        data->Fill(data_arr);
       }
@@ -221,7 +222,7 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t maxEvents,bool automatic,int32_t
   double time_elapsed = 0.0;
   int32_t count=0;
   uint32_t dat=0;
-  ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
+  //ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
   if (!automatic){
     //ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(3<<6)); //Adjacent channels paired.
     //ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(0x3f<<2)); //Adjacent channels paired.
@@ -274,7 +275,7 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t maxEvents,bool automatic,int32_t
 	           data_arr[k] = (int32_t)Evt->DataChannel[k][j];
              data_arr[k] = adc2mV(data_arr[k]);
 	        }
-	        data_arr[NCh]=j;
+	        data_arr[NCh]=j*2; // Tiempo de sampling
 	        data_arr[NCh+1]=count+i+start_event;
 	        data->Fill(data_arr);
       }

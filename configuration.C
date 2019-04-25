@@ -1,5 +1,5 @@
 #include "configuration.h"
-
+#include "CaenDigitizerSiLab.h"
 
 int model = 5730;
 int polarization = 0;
@@ -7,7 +7,7 @@ int vthreshold = 50; //in mV
 int acqsamples = 100;
 int nevents = 100;
 int bunches = 1;
-int ptriggersize = 60;
+uint32_t ptriggersize = 60;
 int triggerpolaritymode = 1;
 int timeout = 10;
 int triggerSource = 0;

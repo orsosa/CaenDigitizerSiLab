@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include "CaenDigitizerSiLab.h"
 
 
 //extern int USB_HV;
@@ -20,7 +21,7 @@ extern int vthreshold;
 extern int acqsamples;
 extern int nevents;
 extern int bunches;
-extern int ptriggersize;
+extern uint32_t ptriggersize;
 extern int triggerpolaritymode;
 extern int timeout;
 extern int triggerSource;
