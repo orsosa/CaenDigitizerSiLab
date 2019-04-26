@@ -247,11 +247,12 @@ public:
   {
     kSamples=nsamples;
     ret = CAEN_DGTZ_SetRecordLength(handle,kSamples);
-    ret = CAEN_DGTZ_SetPostTriggerSize(handle,trigger_size);
     uint32_t configured_kSamples = 0;
     ret = CAEN_DGTZ_GetRecordLength(handle, &configured_kSamples);
     std::cout<<"New number of samples per aqc = "<<configured_kSamples<<std::endl;
-
+    
+    //El post trigger size se calibra segun error de 150 muestras de desfase, propio del Digitizer
+    ret = CAEN_DGTZ_SetPostTriggerSize(handle,(trigger_size-7500/configured_kSamples));
     uint32_t configured_trigger_size = 0;
     ret = CAEN_DGTZ_GetPostTriggerSize(handle, &configured_trigger_size);
     std::cout<<"New postTrigger Size= "<<configured_trigger_size<< "\% | Equal to: "<< kSamples*configured_trigger_size/100<<" samples."<<std::endl;
