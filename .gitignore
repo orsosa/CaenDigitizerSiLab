@@ -5,3 +5,5 @@
 *.txt
 CaenDigitizerSiLabDict.cxx
 example
+/.vscode
+%00.desktop
