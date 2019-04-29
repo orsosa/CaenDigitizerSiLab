@@ -50,7 +50,7 @@ int32_t CaenDigitizerSiLab::init()
   ret = CAEN_DGTZ_SetChannelEnableMask(handle,kEnableMask);// no disponible en el DT5740
 
   //adc2mv -> (ADC*2.0/( (1<<14) - 1.0 ) + 2.0*0x1000/0xffff - 1.0 -1.0)*1000
-  //  trigthresh = th2int(0.5);//threshold in volts.
+  //trigthresh = th2int(0.5);//threshold in volts.
   //trigthresh=15318;
   trigthresh=mV2adc(-5);
   //trigthresh=15000;//-43mV
@@ -150,8 +150,11 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t st
 {
   int32_t count=0;
   uint32_t dat=0;
+
+  //Se libera el buffer y se vuelve a ubicar, por si han habido cambios en las configuraciones de la ventana de adquisicion
   ret = CAEN_DGTZ_FreeReadoutBuffer(&buffer);
   ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);  //ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
+  
   if (!automatic){
     //ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(3<<6)); //Adjacent channels paired.
     //ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(0x3f<<2)); //Adjacent channels paired.
@@ -223,8 +226,11 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t maxEvents,bool automatic,int32_t
   double time_elapsed = 0.0;
   int32_t count=0;
   uint32_t dat=0;
+
+  //Se libera el buffer y se vuelve a ubicar, por si han habido cambios en las configuraciones de la ventana de adquisicion
   ret = CAEN_DGTZ_FreeReadoutBuffer(&buffer);
   ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
+  
   //ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
   if (!automatic){
     //ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(3<<6)); //Adjacent channels paired.

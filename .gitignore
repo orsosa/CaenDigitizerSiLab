@@ -1,0 +1,7 @@
+*.o
+*.d
+*.pcm
+*.root
+*.txt
+CaenDigitizerSiLabDict.cxx
+example
