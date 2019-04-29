@@ -251,7 +251,7 @@ public:
     ret = CAEN_DGTZ_GetRecordLength(handle, &configured_kSamples);
     std::cout<<"New number of samples per aqc = "<<configured_kSamples<<std::endl;
     
-    //El posttrigger size se calibra segun error de 150 muestras de desfase, propio del Digitizer
+    //El posttrigger size se calibra segun error de 75 muestras de desfase, propio del Digitizer
     int calibracion = 7500/configured_kSamples;
     ret = CAEN_DGTZ_SetPostTriggerSize(handle,(trigger_size-calibracion));
 
