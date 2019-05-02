@@ -224,13 +224,13 @@ public:
     kPolarizationType = pol;
     switch (kPolarizationType)
       {
-      case 0:
+      case 0: //rango de -1V a 1V, centrado en 0V
             	kOffset=0x7FFF;
             	break;
-      case -1:
+      case -1://Rango de -2V a 0V, centrado en -1V
             	kOffset=0x08c0; //offset adaptado para que el cero calze con lo esperado
             	break;
-      case 1:
+      case 1: //Rango de 0V a 2V, centrado en 1V
               kOffset=0xf7a3; //offset adaptado para que el cero calze con lo esperado
               //kOffset=0xffff;
       }
@@ -255,9 +255,13 @@ public:
     int calibracion = 7500/configured_kSamples;
     ret = CAEN_DGTZ_SetPostTriggerSize(handle,(trigger_size-calibracion));
 
+    //Se agrega variable para leer el posttrigger size configurado en el digitizer.
     uint32_t configured_trigger_size = 0;
     ret = CAEN_DGTZ_GetPostTriggerSize(handle, &configured_trigger_size);
-    std::cout<<"New postTrigger Size= "<<configured_trigger_size+calibracion<< "\% | Equal to: "<< kSamples*(configured_trigger_size+calibracion)/100<<" samples."<<std::endl;
+    std::cout<<"New postTrigger Size= "
+      <<configured_trigger_size+calibracion<< "\% | Equal to: "
+      << kSamples*(configured_trigger_size+calibracion)/100
+      <<" samples."<<std::endl;
     
     ret = CAEN_DGTZ_FreeReadoutBuffer(&buffer);
     ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
