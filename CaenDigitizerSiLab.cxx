@@ -47,7 +47,14 @@ int32_t CaenDigitizerSiLab::init()
   }
   std::cout<<"number of samnples per acq: "<<kSamples<<std::endl;
   ret = CAEN_DGTZ_SetRecordLength(handle,kSamples); // samples a grabar por acquisition windows CAMBIAR es decir tamaño de buffer
-  ret = CAEN_DGTZ_SetChannelEnableMask(handle,kEnableMask);// no disponible en el DT5740
+  
+  if (kModel==5740){
+    ret = CAEN_DGTZ_SetGroupEnableMask(handle,0xF);//Todos habilitados
+  }
+  else {
+    ret = CAEN_DGTZ_SetChannelEnableMask(handle,kEnableMask);
+  }
+
 
   //adc2mv -> (ADC*2.0/( (1<<14) - 1.0 ) + 2.0*0x1000/0xffff - 1.0 -1.0)*1000
   //trigthresh = th2int(0.5);//threshold in volts.
@@ -58,14 +65,28 @@ int32_t CaenDigitizerSiLab::init()
 
   uint32_t dat=0;
   uint32_t reg = 0x1088;
-  for (int32_t k=0;k<MaxNCh;k++)
-  {
-      ret = CAEN_DGTZ_ReadRegister(handle,(reg+k*0x100),&dat);
-      ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
-      ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,k,trigthresh);                  /* Set selfTrigger threshold */
-      //ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnFallingEdge);
-      ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, kTriggerpolaritymode);
+  if (kModel==5740){
+    for (int32_t k=0;k<MaxNCh/8;k++)
+    {
+        ret = CAEN_DGTZ_ReadRegister(handle,(reg+k*0x100),&dat);
+        ret = CAEN_DGTZ_SetGroupDCOffset(handle,k,kOffset);
+        ret = CAEN_DGTZ_SetGroupTriggerThreshold(handle,k,trigthresh);                  /* Set selfTrigger threshold */
+        //ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnFallingEdge);
+        ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, kTriggerpolaritymode);
+    }
+
   }
+  else{
+    for (int32_t k=0;k<MaxNCh;k++)
+    {
+        ret = CAEN_DGTZ_ReadRegister(handle,(reg+k*0x100),&dat);
+        ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
+        ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,k,trigthresh);                  /* Set selfTrigger threshold */
+        //ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnFallingEdge);
+        ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, kTriggerpolaritymode);
+    }
+  }
+  
 
 
   ret = CAEN_DGTZ_WriteRegister(handle, 0x811C, 0x000001); // Set Trig-In Trig-Out as TTL (not NIM)
@@ -117,13 +138,26 @@ int32_t CaenDigitizerSiLab::setTrigADC(int32_t trigthresh)
 {
   std::cout<<"trigthreshold: "<<adc2mV(trigthresh)<<std::endl;
   uint32_t dat = 0;
-  for (int32_t k=0;k<MaxNCh;k++)
-  {
-      ret = CAEN_DGTZ_ReadRegister(handle,(0x1088+k*0x100),&dat);
-      ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
-      ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,k,trigthresh);                  /* Set selfTrigger threshold */
-      //ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnFallingEdge);
-      ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, kTriggerpolaritymode);
+  if(kModel==5740){
+    for (int32_t k=0;k<MaxNCh/8;k++)
+    {
+        ret = CAEN_DGTZ_ReadRegister(handle,(0x1088+k*0x100),&dat);
+        ret = CAEN_DGTZ_SetGroupDCOffset(handle,k,kOffset);
+        ret = CAEN_DGTZ_SetGroupTriggerThreshold(handle,k,trigthresh);                  /* Set selfTrigger threshold */
+        //ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnFallingEdge);
+        ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, kTriggerpolaritymode);
+    }
+
+  }
+  else{
+    for (int32_t k=0;k<MaxNCh;k++)
+    {
+        ret = CAEN_DGTZ_ReadRegister(handle,(0x1088+k*0x100),&dat);
+        ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
+        ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle,k,trigthresh);                  /* Set selfTrigger threshold */
+        //ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, CAEN_DGTZ_TriggerOnFallingEdge);
+        ret = CAEN_DGTZ_SetTriggerPolarity(handle, k, kTriggerpolaritymode);
+    }
   }
   return 0;
 }
@@ -159,16 +193,26 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t st
     //ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(3<<6)); //Adjacent channels paired.
     //ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(0x3f<<2)); //Adjacent channels paired.
     if(triggerSource == 8){
+      ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_DISABLED,0x00);
       ret = CAEN_DGTZ_SetExtTriggerInputMode(handle, CAEN_DGTZ_TRGMODE_ACQ_ONLY);
     }
-    else if ((0<=triggerSource)&&(triggerSource<=7)){
+    else if ((0<=triggerSource)&&(triggerSource<=7)&&(kModel!=5740)){
+      ret = CAEN_DGTZ_SetExtTriggerInputMode(handle, CAEN_DGTZ_TRGMODE_DISABLED);
       ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,0x1<<triggerSource);
     }
     else{
-      printf("Invalid Trigger Source, setting Ch0 as default source.\n");
-      ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,0x1<<0);
-    }    
+      if(kModel==5740){
+        ret = CAEN_DGTZ_SetExtTriggerInputMode(handle, CAEN_DGTZ_TRGMODE_DISABLED);
+        ret = CAEN_DGTZ_SetGroupSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(0x1<<0));
+      }
+      else{
+        printf("Invalid Trigger Source, setting Ch0 as default source.\n");
+        ret = CAEN_DGTZ_SetExtTriggerInputMode(handle, CAEN_DGTZ_TRGMODE_DISABLED);
+        ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(0x1<<0));
+      }
+    }
   }
+
 
   //setCoincidence(0);
   //setCoincidence(2);
@@ -203,7 +247,7 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t events,bool automatic,int32_t st
 	           data_arr[k] = (int32_t)Evt->DataChannel[k][j];
              data_arr[k] = adc2mV(data_arr[k]);
 	        }
-	        data_arr[NCh]=j*2; // Tiempo de sampling
+	        data_arr[NCh]=j*(kSamplingTime*1000000000); // Tiempo de sampling
 	        data_arr[NCh+1]=count+i+start_event;
 	        data->Fill(data_arr);
       }
@@ -239,14 +283,20 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t maxEvents,bool automatic,int32_t
       ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_DISABLED,0x00);
       ret = CAEN_DGTZ_SetExtTriggerInputMode(handle, CAEN_DGTZ_TRGMODE_ACQ_ONLY);
     }
-    else if ((0<=triggerSource)&&(triggerSource<=7)){
+    else if ((0<=triggerSource)&&(triggerSource<=7)&&(kModel!=5740)){
       ret = CAEN_DGTZ_SetExtTriggerInputMode(handle, CAEN_DGTZ_TRGMODE_DISABLED);
       ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,0x1<<triggerSource);
     }
     else{
-      printf("Invalid Trigger Source, setting Ch0 as default source.\n");
-      ret = CAEN_DGTZ_SetExtTriggerInputMode(handle, CAEN_DGTZ_TRGMODE_DISABLED);
-      ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(0x1<<0));
+      if(kModel==5740){
+        ret = CAEN_DGTZ_SetExtTriggerInputMode(handle, CAEN_DGTZ_TRGMODE_DISABLED);
+        ret = CAEN_DGTZ_SetGroupSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(0x1<<0));
+      }
+      else{
+        printf("Invalid Trigger Source, setting Ch0 as default source.\n");
+        ret = CAEN_DGTZ_SetExtTriggerInputMode(handle, CAEN_DGTZ_TRGMODE_DISABLED);
+        ret = CAEN_DGTZ_SetChannelSelfTrigger(handle,CAEN_DGTZ_TRGMODE_ACQ_ONLY,(0x1<<0));
+      }
     }
   }
 
@@ -284,7 +334,7 @@ int32_t  CaenDigitizerSiLab::readEvents(int32_t maxEvents,bool automatic,int32_t
 	           data_arr[k] = (int32_t)Evt->DataChannel[k][j];
              data_arr[k] = adc2mV(data_arr[k]);
 	        }
-	        data_arr[NCh]=j*2; // Tiempo de sampling
+	        data_arr[NCh]=j*(kSamplingTime*1000000000); // Tiempo de sampling
 	        data_arr[NCh+1]=count+i+start_event;
 	        data->Fill(data_arr);
       }

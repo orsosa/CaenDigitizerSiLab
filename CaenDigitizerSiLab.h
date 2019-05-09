@@ -114,7 +114,15 @@ public:
                   msg = "Model DT5724";
                   kTempSupported = kFALSE;
                   kCalibrationSupported = kFALSE;
-                  kSamplingTime = 0.0000001;
+                  kSamplingTime = 0.00000001;
+                  break;
+      case 5740:  MaxNCh = 32;
+                  MaxVpp = 2;
+                  NBit = 12;
+                  msg = "Model DT5740";
+                  kTempSupported = kFALSE;
+                  kCalibrationSupported = kFALSE;
+                  kSamplingTime = 0.000000016;
                   break;
       default:    MaxNCh = 8;
                   MaxVpp = 2;
@@ -235,12 +243,24 @@ public:
               //kOffset=0xffff;
       }
     uint32_t dat = 0;
-    for (int k =0; k<MaxNCh;k++)
-    {
-      ret = CAEN_DGTZ_ReadRegister(handle,(0x1088+k*0x100),&dat);
-      ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
+
+    if(kModel==5740){
+      for (int k =0; k<MaxNCh/8;k++)
+      {
+        ret = CAEN_DGTZ_ReadRegister(handle,(0x1088+k*0x100),&dat);
+        //Funcion especial para configurar cada uno uno de los 4 grupos de 8 canales
+        ret = CAEN_DGTZ_SetGroupDCOffset(handle,k,kOffset);
+      }
     }
-    calibrate();
+    else{
+      for (int k =0; k<MaxNCh;k++)
+      {
+        ret = CAEN_DGTZ_ReadRegister(handle,(0x1088+k*0x100),&dat);
+        ret = CAEN_DGTZ_SetChannelDCOffset(handle,k,kOffset);
+      }
+      calibrate();
+    }
+    
   }
 
   void setNSamples(int32_t nsamples=50, uint32_t trigger_size=60)
@@ -251,18 +271,25 @@ public:
     ret = CAEN_DGTZ_GetRecordLength(handle, &configured_kSamples);
     std::cout<<"New number of samples per aqc = "<<configured_kSamples<<std::endl;
     
-    //El posttrigger size se calibra segun error de 75 muestras de desfase, propio del Digitizer
-    int calibracion = 7500/configured_kSamples;
-    ret = CAEN_DGTZ_SetPostTriggerSize(handle,(trigger_size-calibracion));
+    if(kModel==5740){
+      //Se configura manualmente el posttrigger size. La funcin no funciona aqui.
+      //El posttrigger size se calibra segun error de 75 muestras de desfase, propio del Digitizer
+      ret = CAEN_DGTZ_WriteRegister(handle,0x8114,trigger_size*configured_kSamples/100-12);
+    }
+    else{
+      //El posttrigger size se calibra segun error de 75 muestras de desfase, propio del Digitizer
+      int calibracion = (75*100)/configured_kSamples;
+      ret = CAEN_DGTZ_SetPostTriggerSize(handle,(trigger_size+calibracion));
 
-    //Se agrega variable para leer el posttrigger size configurado en el digitizer.
-    uint32_t configured_trigger_size = 0;
-    ret = CAEN_DGTZ_GetPostTriggerSize(handle, &configured_trigger_size);
-    std::cout<<"New postTrigger Size= "
-      <<configured_trigger_size+calibracion<< "\% | Equal to: "
-      << kSamples*(configured_trigger_size+calibracion)/100
-      <<" samples."<<std::endl;
-    
+      //Se agrega variable para leer el posttrigger size configurado en el digitizer.
+      uint32_t configured_trigger_size = 0;
+      ret = CAEN_DGTZ_GetPostTriggerSize(handle, &configured_trigger_size);
+      std::cout<<"New postTrigger Size= "
+        <<configured_trigger_size+calibracion<< "\% | Equal to: "
+        << kSamples*(configured_trigger_size+calibracion)/100
+        <<" samples."<<std::endl;
+    }
+      
     ret = CAEN_DGTZ_FreeReadoutBuffer(&buffer);
     ret = CAEN_DGTZ_MallocReadoutBuffer(handle,&buffer,(uint32_t *)&size);
   
