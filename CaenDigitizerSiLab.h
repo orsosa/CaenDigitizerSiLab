@@ -274,7 +274,7 @@ public:
     if(kModel==5740){
       //Se configura manualmente el posttrigger size. La funcin no funciona aqui.
       //El posttrigger size se calibra segun error de 75 muestras de desfase, propio del Digitizer
-      ret = CAEN_DGTZ_WriteRegister(handle,0x8114,trigger_size*configured_kSamples/100-12);
+      ret = CAEN_DGTZ_WriteRegister(handle,0x8114,trigger_size*configured_kSamples/100-10);
     }
     else{
       //El posttrigger size se calibra segun error de 75 muestras de desfase, propio del Digitizer
