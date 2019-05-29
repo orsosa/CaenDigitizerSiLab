@@ -1,6 +1,8 @@
 [Dolphin]
-Timestamp=2019,4,29,9,39,41
+HeaderColumnWidths=356,92,91
+Timestamp=2019,5,17,15,38,57
 Version=3
+ViewMode=1
 
 [Settings]
 HiddenFilesShown=true

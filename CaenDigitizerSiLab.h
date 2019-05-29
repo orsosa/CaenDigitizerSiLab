@@ -24,6 +24,7 @@
 
 //#define MaxVpp 2.0
 //#define NBit 14
+extern int quit;
 
 class CaenDigitizerSiLab: public TObject
 {
@@ -66,7 +67,6 @@ public:
   CAEN_DGTZ_TriggerPolarity_t kTriggerpolaritymode;
   Float_t kSamplingTime;
 
-
 public:
  CaenDigitizerSiLab() : kPolarizationType(0), kEnableMask(0xff), kSamples(100), kDoCalibration(kFALSE) {}
  CaenDigitizerSiLab( int8_t p, uint32_t em, int32_t s, bool docal): kPolarizationType(p), kEnableMask(em), kSamples(s), kDoCalibration(docal) {init();}
@@ -77,8 +77,10 @@ public:
   int32_t getPedestal(int32_t samples){return 0;}
   CAEN_DGTZ_ErrorCode  startSWAcq(){ret = CAEN_DGTZ_SWStartAcquisition(handle); return ret;}
   CAEN_DGTZ_ErrorCode  stopSWAcq(){ret = CAEN_DGTZ_SWStopAcquisition(handle); return ret;}
-  int32_t readEvents(int32_t evenst=100,bool automatic=kTRUE, int32_t start_event=0, uint32_t triggerSource=0);
-  int32_t readEvents(int32_t maxEvents,bool automatic,int32_t start_event,double tm, uint32_t triggerSource=0);
+  int32_t readEvents(int32_t evenst=100,    bool automatic=kTRUE,
+                     int32_t start_event=0,            uint32_t triggerSource=0);
+  int32_t readEvents(int32_t maxEvents,     bool automatic,
+                     int32_t start_event,   double tm, uint32_t triggerSource=0);
   int32_t storeData();
   int32_t waitTempStabilization(){return 0;}
   int32_t getTempMeanVar();
